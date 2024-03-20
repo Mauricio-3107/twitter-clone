@@ -1,0 +1,73 @@
+{{template "left-aside" .}}
+
+<!-- Middle Column (Scrollable Content) -->
+
+<div class="w-1/2 overflow-y-auto">
+  <div class="border-b border-gray-100 p-4">
+    <form
+      action="/tweets"
+      method="post"
+      class="flex flex-col items-start gap-6"
+      enctype="multipart/form-data"
+      onsubmit="return validateForm()"
+    >
+      <div class="hidden">
+        {{ csrfField }}
+      </div>
+      <!-- Parent tweet ID = 0 -->
+      <input type="hidden" name="parentTweetID" value="0">
+      <!-- Quoted tweet ID = 0 -->
+      <input type="hidden" name="quotedTweetID" value="0">
+      <label for="tweet" class="text-xl font-semibold">What's happening?</label>
+      <textarea
+        id="tweet"
+        name="tweet"
+        class="w-full p-2 border border-gray-300 rounded focus:outline-none focus:border-black"
+        rows="3"
+        placeholder="What's happening?"
+        oninput="checkTextInput()"
+        onblur="clearCharCount()"
+        tabindex="1"
+      ></textarea>
+      <span id="charCount" class="text-sm text-gray-500"></span>
+      <div class="py-2">
+        <label for="images" class="block mb-2 text-sm font-semibold text-gray-800">
+          Add Images
+          <p class="py-2 text-xs text-gray-600 font-normal">
+            Please only upload jpg, png, and gif files.
+          </p>
+        </label>
+        <input type="file" multiple
+          accept="image/png, image/jpeg, image/gif"
+          id="images" name="images" onchange="checkImageInput()"/>
+      </div>
+      <button
+        id="submitBtn"
+        type="submit"
+        disabled
+        style="opacity: 0.5; cursor: not-allowed;"
+        class="px-6 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 focus:outline-none focus:ring focus:border-blue-300"
+        tabindex="2" 
+      >
+        Post
+      </button>
+    </form>
+  </div>
+  <!-- Sample Tweet/Post -->
+  {{range .TweetsData}}
+    {{template "tweets" .}}
+  {{end}}
+  <!-- More tweets/posts go here -->
+</div>
+
+{{template "right-aside" .}}
+
+{{template "overlay-modal-post" .}}
+
+{{range .TweetsData}}
+  {{template "overlay-modal-reply-ajax" .}}
+  {{template "overlay-modal-retweet-quote" .}}
+  {{template "overlay-modal-post-quote" .}}
+{{end}}
+
+{{template "footer" .}}

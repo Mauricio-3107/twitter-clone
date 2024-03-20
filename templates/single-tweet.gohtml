@@ -1,0 +1,225 @@
+{{template "left-aside" .}}
+
+<!-- Middle Column -->
+
+<div class="w-1/2 overflow-y-auto">
+<div class="px-3 pb-2 mt-4">
+    <!-- Return Button -->
+    <button onclick="goBack()" class="rounded-full p-2 hover:bg-gray-200 focus:outline-none">
+      <svg width="15" height="13" viewBox="0 0 23 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M1.87929 9.02531H21.9944C22.2611 9.02531 22.5169 9.13267 22.7055 9.32377C22.8942 9.51487 23.0001 9.77405 23.0001 10.0443C23.0001 10.3146 22.8942 10.5737 22.7055 10.7648C22.5169 10.9559 22.2611 11.0633 21.9944 11.0633H1.87929C1.61255 11.0633 1.35673 10.9559 1.16811 10.7648C0.979498 10.5737 0.873535 10.3146 0.873535 10.0443C0.873535 9.77405 0.979498 9.51487 1.16811 9.32377C1.35673 9.13267 1.61255 9.02531 1.87929 9.02531Z" fill="black"/>
+        <path d="M2.42901 9.89873L10.7684 18.1057C10.9572 18.2916 11.0633 18.5436 11.0633 18.8065C11.0633 19.0693 10.9572 19.3214 10.7684 19.5072C10.5796 19.6931 10.3236 19.7975 10.0565 19.7975C9.78954 19.7975 9.53347 19.6931 9.34467 19.5072L0.295396 10.5995C0.20176 10.5075 0.12747 10.3983 0.0767807 10.2781C0.0260918 10.1578 0 10.0289 0 9.89873C0 9.76855 0.0260918 9.63964 0.0767807 9.5194C0.12747 9.39915 0.20176 9.28993 0.295396 9.19799L9.34467 0.290257C9.53347 0.104408 9.78954 0 10.0565 0C10.3236 0 10.5796 0.104408 10.7684 0.290257C10.9572 0.476105 11.0633 0.728169 11.0633 0.990999C11.0633 1.25383 10.9572 1.50589 10.7684 1.69174L2.42901 9.89873Z" fill="black"/>
+      </svg>
+    </button>
+    <div class="inline-block">
+      <div class="flex gap-6">
+        <h2 class="text-xl font-semibold">Post</h2>
+      </div>
+    </div>
+  </div>
+  <div class="border-b border-gray-100">
+    {{template "tweetData" .TweetData}}
+    <!-- Replies -->
+    {{range .Replies}}
+      {{template "replies" .}}
+    {{end}}
+    <!-- End of Replies -->
+  </div>
+</div>
+
+{{template "right-aside" .}}
+
+{{template "overlay-modal-post" .TweetData}}
+
+{{template "overlay-modal-post-quote" .TweetData}}
+
+{{template "overlay-modal-reply" .TweetData}}
+
+{{template "overlay-modal-retweet-quote" .TweetData}}
+
+{{range .Replies}}
+  {{template "overlay-modal-reply-ajax" .}}
+{{end}}
+
+
+{{template "footer" .}}
+
+
+
+{{define "tweetData"}}
+  <div class="flex flex-col gap-4 p-4">
+    <div class="flex items-center">
+      <img
+        src="/{{.ProfileImage}}"
+        alt="Profile Picture"
+        class="w-8 h-8 rounded-full mr-2"
+      />
+      <div>
+        <div class="text-md font-semibold hover:underline hover:text-black cursor-pointer" onclick="redirectToProfile(event, '{{.Username}}')">{{.Name}}</div>
+        <p class="text-sm text-gray-500">@{{.Username}}</p>
+      </div>
+    </div>
+    <p class="text-lg">{{.Text}}</p>
+    <!-- Render images -->
+    {{if .ImagesURL}}
+      <div class="flex flex-wrap">
+        {{range .ImagesURL}}
+          <img src="/{{.}}" alt="Tweet Image" class="w-32 h-32 object-cover mr-2 mb-2 rounded full">
+        {{end}}
+      </div>
+    {{end}}
+    <!-- End of Images -->
+    <!-- Quoted tweet -->
+    {{if .QuotedTweetID}}
+      {{template "quotedTweet" .QuotedTweet}}
+    {{end}}
+    <p class="text-sm text-gray-500">{{.CreatedAt}}</p>
+  </div>
+ 
+  <!-- Buttons -->
+  <div class="flex items-center mt-4 border-y border-gray-100"> 
+    <!-- Reply Button -->
+    <div id="replyButton" class="flex items-center gap-1 cursor-pointer hover:bg-blue-100 rounded-full p-1 hover:text-blue-600" onclick="toggleModalReplySingleTweet()">
+      <svg id="replyIcon-{{.TweetID}}" width="18" height="17" viewBox="0 0 18 17" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path fill-rule="evenodd" clip-rule="evenodd" d="M1.43123 11.5201C-0.874056 6.0193 3.28839 0 9.3972 0H9.72639C10.8129 0 11.8888 0.208073 12.8926 0.612339C13.8964 1.01661 14.8084 1.60915 15.5767 2.35613C16.345 3.10312 16.9544 3.98992 17.3702 4.9659C17.786 5.94189 18 6.98794 18 8.04434C18 10.4195 17.0296 12.6974 15.3022 14.3769C13.5748 16.0565 11.232 17 8.78909 17H0.769797C0.610457 17.0001 0.455007 16.9522 0.324928 16.8627C0.194848 16.7732 0.0965602 16.6467 0.0436466 16.5005C-0.00926697 16.3544 -0.0141942 16.1959 0.0295458 16.0469C0.0732859 15.8979 0.163534 15.7659 0.287819 15.6689L2.30905 14.0906C2.35227 14.0569 2.38311 14.0105 2.39698 13.9584C2.41084 13.9063 2.40698 13.8512 2.38596 13.8014L1.43123 11.5201ZM9.3972 1.4956C4.3795 1.4956 0.961563 6.43806 2.85461 10.9558L3.81036 13.2381C3.95598 13.586 3.98224 13.9703 3.88525 14.3339C3.78825 14.6975 3.57317 15.0209 3.27198 15.2561L2.95511 15.5044H8.78909C10.824 15.5044 12.7756 14.7184 14.2145 13.3194C15.6534 11.9204 16.4618 10.0229 16.4618 8.04434C16.4618 6.30751 15.7522 4.64181 14.489 3.41368C13.2259 2.18556 11.5127 1.4956 9.72639 1.4956H9.3972Z" fill="gray"/>
+        </svg>
+      <span id="replyCount-{{.TweetID}}" class="text-gray-500 font-normal transition-colors duration-300">{{.CountReplies}}</span>
+    </div>
+    <!-- Retweet button -->
+    <div id="retweetButton" class="flex items-center gap-1 cursor-pointer hover:bg-green-100 rounded-full p-1 hover:text-green-600" onclick="toggleModalRetQuote(event, {{.TweetID}})">
+      <svg id="retweetIcon-{{.TweetID}}" width="21" height="15" viewBox="0 0 21 15" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path class="retweet-path" d="M17.3814 14.0217H16.2882V2.28262C16.2882 1.89131 16.0696 1.63044 15.7417 1.63044H9.03876V0.326096H15.7417C16.6708 0.326096 17.3814 1.17392 17.3814 2.28262V14.0217Z" fill="gray"/>
+        <path class="retweet-path" d="M16.8348 15L13.118 9.91305L13.9926 9.00001L16.8348 13.0435L19.677 9.00001L20.5516 9.91305L16.8348 15ZM11.2099 14.6739H4.80998C3.88078 14.6739 3.17023 13.8261 3.17023 12.7174V0.978271H4.26339V12.7174C4.26339 13.1087 4.48203 13.3696 4.80998 13.3696H11.2099V14.6739Z" fill="gray"/>
+        <path class="retweet-path" d="M6.559 6L3.71676 1.95652L0.874533 6L0 5.08695L3.71676 0L7.43353 5.08695L6.559 6Z" fill="gray"/>
+      </svg>
+      <span
+        id="retweetCount-{{.TweetID}}"class="text-gray-500 font-normal transition-colors duration-300">0</span>
+    </div>
+    
+    <!-- Like button -->     
+    <div id="likeButton" class="flex items-center gap-1 cursor-pointer hover:bg-pink-100 rounded-full p-1 hover:text-pink-600" onclick="toggleLike(event, {{.TweetID}})">
+        <svg id="likeIcon-{{.TweetID}}" width="20" height="18" viewBox="0 0 20 18" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path class="heart-path" d="M5.95 1C3.21625 1 1 3.29564 1 6.12731C1 11.2546 6.85 15.9158 10 17C13.15 15.9158 19 11.2546 19 6.12731C19 3.29564 16.7837 1 14.05 1C12.376 1 10.8955 1.86092 10 3.17864C9.54356 2.50519 8.93717 1.95559 8.23219 1.57635C7.52721 1.19712 6.74438 0.99942 5.95 1Z" stroke="gray" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        <span id="likeCount-{{.TweetID}}" class="text-gray-500 font-normal transition-colors duration-300">0</span>
+    </div>
+  
+    <!-- Bookmarks Button -->
+    <div id="bookmarkButton" class="flex items-center gap-1 cursor-pointer hover:bg-blue-100 rounded-full p-1 hover:text-blue-600" onclick="toggleBookmark(event, {{.TweetID}})">
+      <svg id="bookmarkIcon-{{.TweetID}}" width="14" height="19" viewBox="0 0 14 19" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path class="bookmark-path" d="M11 1H3C2.46957 1 1.96086 1.19901 1.58579 1.55324C1.21071 1.90748 1 2.38792 1 2.88889V18L7 15.1667L13 18V2.88889C13 2.38792 12.7893 1.90748 12.4142 1.55324C12.0391 1.19901 11.5304 1 11 1Z" stroke="gray" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </div>
+  </div>
+  <!-- End of Buttons -->
+{{end}}
+
+{{define "replies"}}
+  <div class="p-4 border-b border-gray-100 hover:bg-gray-100">
+      <a href="/{{.Username}}/status/{{.TweetID}}" class="block">
+        <div class="flex items-center mb-2">
+          <img src="/{{.ProfileImage}}" alt="Profile Picture" class="w-8 h-8 rounded-full mr-2"/>
+          <div>
+            <div class="text-md font-semibold hover:underline hover:text-black" onclick="redirectToProfile(event, '{{.Username}}')">{{.Name}}</div>
+            <p class="text-sm text-gray-500">@{{.Username}} • {{.CreatedAt}}</p>
+          </div>
+        </div>
+        <p class="text-lg">{{.Text}}</p>
+        <!-- Render images -->
+        {{if .ImagesURL}}
+        <div class="flex flex-wrap mt-4">
+          {{ range.ImagesURL }}
+          <img
+            src="/{{.}}"
+            alt="Tweet Image"
+            class="w-32 h-32 object-cover mr-2 mb-2 rounded full"
+          />
+          {{ end }}
+        </div>
+        {{ end }}
+
+        <!-- Buttons -->
+        <div class="flex items-center mt-4">
+          <!-- Reply Button -->
+          <div class="flex items-center gap-1 cursor-pointer hover:bg-blue-100 rounded-full p-1 hover:text-blue-600" onclick="toggleModalReplyAjax(event, {{.TweetID}})">
+            <svg width="18" height="17" viewBox="0 0 18 17" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path fill-rule="evenodd" clip-rule="evenodd" d="M1.43123 11.5201C-0.874056 6.0193 3.28839 0 9.3972 0H9.72639C10.8129 0 11.8888 0.208073 12.8926 0.612339C13.8964 1.01661 14.8084 1.60915 15.5767 2.35613C16.345 3.10312 16.9544 3.98992 17.3702 4.9659C17.786 5.94189 18 6.98794 18 8.04434C18 10.4195 17.0296 12.6974 15.3022 14.3769C13.5748 16.0565 11.232 17 8.78909 17H0.769797C0.610457 17.0001 0.455007 16.9522 0.324928 16.8627C0.194848 16.7732 0.0965602 16.6467 0.0436466 16.5005C-0.00926697 16.3544 -0.0141942 16.1959 0.0295458 16.0469C0.0732859 15.8979 0.163534 15.7659 0.287819 15.6689L2.30905 14.0906C2.35227 14.0569 2.38311 14.0105 2.39698 13.9584C2.41084 13.9063 2.40698 13.8512 2.38596 13.8014L1.43123 11.5201ZM9.3972 1.4956C4.3795 1.4956 0.961563 6.43806 2.85461 10.9558L3.81036 13.2381C3.95598 13.586 3.98224 13.9703 3.88525 14.3339C3.78825 14.6975 3.57317 15.0209 3.27198 15.2561L2.95511 15.5044H8.78909C10.824 15.5044 12.7756 14.7184 14.2145 13.3194C15.6534 11.9204 16.4618 10.0229 16.4618 8.04434C16.4618 6.30751 15.7522 4.64181 14.489 3.41368C13.2259 2.18556 11.5127 1.4956 9.72639 1.4956H9.3972Z" fill="gray" />
+            </svg>
+            <span
+              id="repliesCount-{{.TweetID}}"class="text-gray-500 font-normal transition-colors duration-300">0</span>
+            <!-- Number of comments -->
+          </div>
+          <!-- Retweet button -->
+          <div id="retweetButton" class="flex items-center gap-1 cursor-pointer hover:bg-green-100 rounded-full p-1 hover:text-green-600" onclick="toggleModalRetQuote(event, {{.TweetID}})">
+            <svg id="retweetIcon-{{.TweetID}}" width="21" height="15" viewBox="0 0 21 15" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path class="retweet-path" d="M17.3814 14.0217H16.2882V2.28262C16.2882 1.89131 16.0696 1.63044 15.7417 1.63044H9.03876V0.326096H15.7417C16.6708 0.326096 17.3814 1.17392 17.3814 2.28262V14.0217Z" fill="gray"/>
+              <path class="retweet-path" d="M16.8348 15L13.118 9.91305L13.9926 9.00001L16.8348 13.0435L19.677 9.00001L20.5516 9.91305L16.8348 15ZM11.2099 14.6739H4.80998C3.88078 14.6739 3.17023 13.8261 3.17023 12.7174V0.978271H4.26339V12.7174C4.26339 13.1087 4.48203 13.3696 4.80998 13.3696H11.2099V14.6739Z" fill="gray"/>
+              <path class="retweet-path" d="M6.559 6L3.71676 1.95652L0.874533 6L0 5.08695L3.71676 0L7.43353 5.08695L6.559 6Z" fill="gray"/>
+            </svg>
+            <span
+              id="retweetCount-{{.TweetID}}"class="text-gray-500 font-normal transition-colors duration-300">0</span>
+          </div>
+          <!-- Like button -->
+          <div id="likeButton" class="flex items-center gap-1 cursor-pointer hover:bg-pink-100 rounded-full p-1 hover:text-pink-600" onclick="toggleLike(event, {{.TweetID}})">
+            <svg id="likeIcon-{{.TweetID}}" width="20" height="18" viewBox="0 0 20 18" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path
+                class="heart-path"
+                d="M5.95 1C3.21625 1 1 3.29564 1 6.12731C1 11.2546 6.85 15.9158 10 17C13.15 15.9158 19 11.2546 19 6.12731C19 3.29564 16.7837 1 14.05 1C12.376 1 10.8955 1.86092 10 3.17864C9.54356 2.50519 8.93717 1.95559 8.23219 1.57635C7.52721 1.19712 6.74438 0.99942 5.95 1Z"
+                stroke="gray"
+                stroke-width="1.5"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              />
+            </svg>
+            <span
+              id="likeCount-{{.TweetID}}"class="text-gray-500 font-normal transition-colors duration-300">0</span>
+          </div>
+          <!-- Bookmarks Button -->
+          <button class="flex items-center text-gray-500">
+            <svg
+              width="13"
+              height="18"
+              viewBox="0 0 13 18"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                fill-rule="evenodd"
+                clip-rule="evenodd"
+                d="M1.46774 0H11.5323C11.9215 0 12.2949 0.154361 12.5701 0.429124C12.8454 0.703888 13 1.07655 13 1.46512V17.3722C12.9999 17.4874 12.9679 17.6003 12.9078 17.6987C12.8476 17.797 12.7615 17.8769 12.6589 17.9296C12.5562 17.9824 12.4411 18.0059 12.3259 17.9976C12.2108 17.9894 12.1002 17.9497 12.0061 17.8829L6.5 13.9574L0.99492 17.8829C0.900888 17.95 0.790145 17.9899 0.674852 17.9983C0.559559 18.0067 0.444176 17.9833 0.341372 17.9305C0.238568 17.8777 0.15232 17.7977 0.0920982 17.6992C0.0318765 17.6007 1.08562e-05 17.4875 0 17.3722V1.46512C0 1.07655 0.154637 0.703888 0.429892 0.429124C0.705147 0.154361 1.07847 0 1.46774 0ZM6.86484 12.6754L11.7419 16.1519V1.46512C11.7419 1.40961 11.7198 1.35637 11.6805 1.31712C11.6412 1.27787 11.5879 1.25582 11.5323 1.25582H1.46774C1.41213 1.25582 1.3588 1.27787 1.31948 1.31712C1.28016 1.35637 1.25806 1.40961 1.25806 1.46512V16.1519L6.13097 12.6754C6.23791 12.5987 6.36625 12.5575 6.4979 12.5575C6.62956 12.5575 6.7579 12.5987 6.86484 12.6754Z"
+                fill="gray"
+              />
+            </svg>
+          </button>
+        </div>
+        <!-- End of Buttons -->
+      </a>
+    </div>
+{{end}}
+
+{{define "quotedTweet"}}
+<div class="p-4 border border-gray-100 hover:bg-gray-100 rounded">
+  <a href="/{{.Username}}/status/{{.TweetID}}" class="block">
+    <div class="flex items-center mb-2">
+      <img src="/{{.ProfileImage}}" alt="Profile Picture" class="w-8 h-8 rounded-full mr-2"/>
+      <div>
+        <div class="text-md font-semibold hover:underline hover:text-black" onclick="redirectToProfile(event, '{{.Username}}')">{{.Name}}</div>
+        <p class="text-sm text-gray-500">@{{.Username}} • {{.CreatedAt}}</p>
+      </div>
+    </div>
+    <p class="text-lg">{{.Text}}</p>
+    <!-- Render images -->
+    {{if .ImagesURL}}
+    <div class="flex flex-wrap mt-4">
+      {{ range .ImagesURL }}
+      <img
+        src="/{{.}}"
+        alt="Tweet Image"
+        class="w-32 h-32 object-cover mr-2 mb-2 rounded full"
+      />
+      {{ end }}
+    </div>
+    {{ end }}
+  </a>
+</div>
+{{end}}

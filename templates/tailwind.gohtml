@@ -1,0 +1,1589 @@
+{{define "left-aside"}}
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <script src="https://cdn.tailwindcss.com"></script>
+  </head>
+  <body>
+    <div class="container mx-auto flex items-start">
+      <!--Left column-->
+      <div class="w-1/4 sticky top-0 h-screen border-r border-gray-100 p-4">
+        <header>
+          <nav class="flex flex-col items-start space-y-10">
+            <!-- <img src="../images/logo.png" /> -->
+            {{/*
+            <div class="p-4 text-4xl">X</div>
+            */}}
+            <div class="flex flex-col items-start">
+              <a href="/home">
+                <img class="w-2/12" src="/images/assets/logo.jpg" />
+              </a>
+              <a class="p-4 text-xl hover:bg-gray-200 rounded-full" href="/home"
+                >Home</a
+              >
+              <a
+                class="p-4 text-xl hover:bg-gray-200 rounded-full"
+                href="/messages"
+                >Messages</a
+              >
+              <a
+                class="p-4 text-xl hover:bg-gray-200 rounded-full"
+                href="/bookmarks"
+                >Bookmarks</a
+              >
+              <a
+                class="p-4 text-xl hover:bg-gray-200 rounded-full"
+                href="/{{ currentUser.UsernameOriginal }}"
+                >Profile</a
+              >
+            </div>
+            <div class="flex flex-col items-start space-y-10 text-center">
+              <a
+                class="py-4 px-16 bg-blue-500 font-semibold text-xl hover:bg-blue-600 rounded-full text-white cursor-pointer"
+                onclick="toggleModal()"
+                >Post</a
+              >
+              <form action="/signout" method="post" class="inline pr-4">
+                <div class="hidden">
+                  {{ csrfField }}
+                </div>
+                <button
+                  class="py-2 px-4 border border-gray-300 font-semibold text-xl text-blue-600 hover:bg-blue-100 rounded-full text-center mb-6 cursor-pointer"
+                  type="submit"
+                >
+                  Sign out
+                </button>
+              </form>
+              <div class="flex items-center mb-2">
+                <img
+                  src="/{{ currentUser.ProfileImage }}"
+                  alt="Profile Picture"
+                  class="w-8 h-8 rounded-full mr-2"
+                />
+                <div>
+                  <strong>{{ currentUser.Name }}</strong>
+                  <p class="text-sm text-gray-500">
+                    @{{ currentUser.UsernameOriginal }}
+                  </p>
+                </div>
+              </div>
+            </div>
+          </nav>
+        </header>
+      </div>
+      {{ end }}
+
+      <!-- Each page's content goes here. -->
+
+      {{define "right-aside"}}
+      <!-- Right Column (Sticky Search) -->
+      <div class="w-1/4 sticky top-0 p-4 border-l border-gray-100 h-screen">
+        <aside>
+          <!-- Your sticky search content goes here -->
+          <!-- Search input -->
+          <div class="relative">
+            <input
+              type="text"
+              placeholder="Search"
+              class="w-full py-2 px-4 bg-gray-200 text-black rounded-full focus:bg-white focus:text-black focus:border-blue-500 outline-none focus:ring focus:ring-blue-500"
+            />
+            <button type="button" class="absolute top-0 right-0 mt-2 mr-2">
+              <!-- You can replace this with a search icon -->
+              Search
+            </button>
+          </div>
+          <!-- Add other search-related content as needed -->
+        </aside>
+      </div>
+    </div>
+    {{ end }}
+
+{{define "overlay-modal-post"}}
+    <!-- Modal Overlay -->
+    <div
+      id="overlay"
+      class="hidden fixed top-0 left-0 w-full h-full bg-black opacity-50"
+      onclick="toggleModal()"
+    ></div>
+
+    <!-- Modal -->
+    <div
+      id="myModal"
+      class="hidden fixed w-1/3 top-16 left-1/2 transform -translate-x-1/2 bg-white p-8 shadow-lg z-50 rounded"
+    >
+      <button
+        type="button"
+        onclick="toggleModal()"
+        class="absolute top-0 right-0 m-4 text-gray-500 hover:text-gray-700"
+      >
+        &times;
+      </button>
+      <!-- Modal content goes here -->
+      <form id="modalForm" action="/tweets/ajax" method="post" class="flex flex-col items-start gap-6" enctype="multipart/form-data" onsubmit="submitTweet(event, {{.Username}})">
+        <!-- CSRF token field -->
+        <div class="hidden">
+          {{ csrfField }}
+        </div>
+        <!-- Parent tweet ID = 0 -->
+        <input type="hidden" name="parentTweetID" value="0">
+        <!-- Quoted tweet ID = 0 -->
+        <input type="hidden" name="quotedTweetID" value="0">
+        <!-- Tweet textarea -->
+        <label for="modalTweet" class="text-xl font-semibold"
+          >What's happening?</label
+        >
+        <textarea
+          id="modalTweet"
+          name="tweet"
+          class="w-full p-2 border border-gray-300 rounded focus:outline-none focus:border-black"
+          rows="3"
+          placeholder="What's happening?"
+          oninput="checkModalTextInput('')"
+          onblur="clearModalCharCount('')"
+          tabindex="1"
+        ></textarea>
+        <span id="modalCharCount" class="text-sm text-gray-500"></span>
+        <!-- Image input -->
+        <div class="py-2">
+          <label
+            for="modalImages"
+            class="block mb-2 text-sm font-semibold text-gray-800"
+          >
+            Add Images
+            <p class="py-2 text-xs text-gray-600 font-normal">
+              Please only upload jpg, png, and gif files.
+            </p>
+          </label>
+          <input
+            type="file"
+            multiple
+            accept="image/png, image/jpeg, image/gif"
+            id="modalImages"
+            name="images"
+            onchange="checkModalImageInput('')"
+          />
+        </div>
+        <!-- Submit button -->
+        <button
+          id="modalSubmitBtn"
+          type="submit"
+          disabled
+          style="opacity: 0.5; cursor: not-allowed"
+          class="px-6 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 focus:outline-none focus:ring focus:border-blue-300"
+          tabindex="2"
+        >
+          Post
+        </button>
+      </form>
+    </div>
+{{ end }}
+
+{{define "overlay-modal-post-quote"}}
+    <!-- Modal Overlay -->
+    <div
+      id="overlayPostQuote-{{.TweetID}}"
+      class="hidden fixed top-0 left-0 w-full h-full bg-black opacity-50"
+      onclick="toggleModalPostQuote(event, {{.TweetID}})"
+    ></div>
+
+    <!-- Modal -->
+    <div
+      id="myModalPostQuote-{{.TweetID}}"
+      class="hidden fixed w-1/3 top-16 left-1/2 transform -translate-x-1/2 bg-white p-8 shadow-lg z-50 rounded z-10"
+    >
+      <button
+        type="button"
+        onclick="toggleModalPostQuote(event, {{.TweetID}})"
+        class="absolute top-0 right-0 m-4 text-gray-500 hover:text-gray-700"
+      >
+        &times;
+      </button>
+      <!-- Modal content goes here -->
+      <form id="modalFormPostQuote-{{.TweetID}}" action="/tweets/ajax" method="post" class="flex flex-col items-start gap-6" enctype="multipart/form-data" onsubmit="submitQuoteTweet(event, {{.TweetID}})">
+        <!-- CSRF token field -->
+        <div class="hidden">
+          {{ csrfField }}
+        </div>
+        <!-- Parent tweet ID = 0 -->
+        <input type="hidden" name="parentTweetID" value="0">
+        <!-- Quoted tweet ID = 0 -->
+        <input type="hidden" name="quotedTweetID" value={{.TweetID}}>
+        <!-- Tweet textarea -->
+        <label for="modalTweet" class="text-xl font-semibold"
+          >What's happening?</label
+        >
+        <textarea
+          id="modalTweetPostQuote-{{.TweetID}}"
+          name="tweet"
+          class="w-full p-2 border border-gray-300 rounded focus:outline-none focus:border-black"
+          rows="3"
+          placeholder="What's happening?"
+          oninput="checkModalTextInput('PostQuote-{{.TweetID}}')"
+          onblur="clearModalCharCount('PostQuote-{{.TweetID}}')"
+          tabindex="1"
+        ></textarea>
+        <span id="modalCharCountPostQuote-{{.TweetID}}" class="text-sm text-gray-500"></span>
+        <!-- Image input -->
+        <div class="py-2">
+          <label
+            for="modalImages"
+            class="block mb-2 text-sm font-semibold text-gray-800"
+          >
+            Add Images
+            <p class="py-2 text-xs text-gray-600 font-normal">
+              Please only upload jpg, png, and gif files.
+            </p>
+          </label>
+          <input
+            type="file"
+            multiple
+            accept="image/png, image/jpeg, image/gif"
+            id="modalImagesPostQuote-{{.TweetID}}"
+            name="images"
+            onchange="checkModalImageInput('PostQuote-{{.TweetID}}')"
+          />
+        </div>
+        <!-- Submit button -->
+        <button
+          id="modalSubmitBtnPostQuote-{{.TweetID}}"
+          type="submit"
+          disabled
+          style="opacity: 0.5; cursor: not-allowed"
+          class="px-6 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 focus:outline-none focus:ring focus:border-blue-300"
+          tabindex="2"
+        >
+          Post
+        </button>
+      </form>
+    </div>
+{{ end }}
+
+{{define "overlay-modal-retweet-quote"}}
+    <!-- Modal Overlay -->
+    <div
+      id="overlayRetQuote-{{.TweetID}}"
+      class="hidden fixed top-0 left-0 w-full h-full bg-black opacity-50"
+      onclick="toggleModalRetQuote(event, {{.TweetID}})"
+    ></div>
+
+    <!-- Modal -->
+    <div
+      id="myModalRetQuote-{{.TweetID}}"
+      class="hidden fixed w-1/3 top-16 left-1/2 transform -translate-x-1/2 bg-white p-8 shadow-lg z-50 rounded"
+    >
+      <button
+        type="button"
+        onclick="toggleModalRetQuote(event, {{.TweetID}})"
+        class="absolute top-0 right-0 m-4 text-gray-500 hover:text-gray-700"
+      >
+        &times;
+      </button>
+      <!-- Modal content goes here -->
+      <div id="retweetButton" class="flex items-center gap-1 cursor-pointer hover:bg-green-100 rounded-full p-1 hover:text-green-600" onclick="toggleRetweet(event, {{.TweetID}})">Retweet</div>
+      <div id="quoteButton" class="flex items-center gap-1 cursor-pointer hover:bg-blue-100 rounded-full p-1 hover:text-blue-600" onclick="toggleModalPostQuote(event, {{.TweetID}} )">Quote</div>
+    </div>
+{{ end }}
+
+{{define "overlay-modal-reply"}}
+    <!-- Modal Overlay -->
+    <div
+      id="overlayReply"
+      class="hidden fixed top-0 left-0 w-full h-full bg-black opacity-50"
+      onclick="toggleModalReplySingleTweet()"
+    ></div>
+
+    <!-- Modal -->
+    <div
+      id="myModalReply"
+      class="hidden fixed w-1/3 top-16 left-1/2 transform -translate-x-1/2 bg-white p-8 shadow-lg z-50 rounded"
+    >
+      <button
+        type="button"
+        onclick="toggleModalReplySingleTweet()"
+        class="absolute top-0 right-0 m-4 text-gray-500 hover:text-gray-700"
+      >
+        &times;
+      </button>
+      <!-- Modal content goes here -->
+      <form
+        id="modalFormReply"
+        action="/tweets"
+        method="post"
+        class="flex flex-col items-start gap-6"
+        enctype="multipart/form-data"
+      >
+        <!-- CSRF token field -->
+        <div class="hidden">
+          {{ csrfField }}
+        </div>
+        <!-- Parent tweet ID -->
+        <input type="hidden" name="parentTweetID" value={{.TweetID}}>
+        <!-- Quoted tweet ID = 0 -->
+        <input type="hidden" name="quotedTweetID" value="0">
+        <input type="hidden" name="usernameTweet" value={{.Username}}>
+        <!-- Tweet textarea -->
+        <label for="modalTweetReply" class="text-xl font-semibold"
+          >Reply</label
+        >
+        <textarea
+          id="modalTweetReply"
+          name="tweet"
+          class="w-full p-2 border border-gray-300 rounded focus:outline-none focus:border-black"
+          rows="3"
+          placeholder="Post your reply"
+          oninput="checkModalTextInput('Reply')"
+          onblur="clearModalCharCount('Reply')"
+          tabindex="1"
+        ></textarea>
+        <span id="modalCharCountReply" class="text-sm text-gray-500"></span>
+        <!-- Image input -->
+        <div class="py-2">
+          <label
+            for="modalImagesReply"
+            class="block mb-2 text-sm font-semibold text-gray-800"
+          >
+            Add Images
+            <p class="py-2 text-xs text-gray-600 font-normal">
+              Please only upload jpg, png, and gif files.
+            </p>
+          </label>
+          <input
+            type="file"
+            multiple
+            accept="image/png, image/jpeg, image/gif"
+            id="modalImagesReply"
+            name="images"
+            onchange="checkModalImageInput('Reply')"
+          />
+        </div>
+        <!-- Submit button -->
+        <button
+          id="modalSubmitBtnReply"
+          type="submit"
+          disabled
+          style="opacity: 0.5; cursor: not-allowed"
+          class="px-6 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 focus:outline-none focus:ring focus:border-blue-300"
+          tabindex="2"
+        >
+          Post
+        </button>
+      </form>
+    </div>
+{{ end }}
+
+{{define "overlay-modal-reply-ajax"}}
+    <!-- Modal Overlay -->
+    <div
+      id="overlayReplyAjax-{{.TweetID}}"
+      class="hidden fixed top-0 left-0 w-full h-full bg-black opacity-50"
+      onclick="toggleModalReplyAjax(event, {{.TweetID}})"
+    ></div>
+
+    <!-- Modal -->
+    <div
+      id="myModalReplyAjax-{{.TweetID}}"
+      class="hidden fixed w-1/3 top-16 left-1/2 transform -translate-x-1/2 bg-white p-8 shadow-lg z-50 rounded"
+    >
+      <button
+        type="button"
+        onclick="toggleModalReplyAjax(event, {{.TweetID}})"
+        class="absolute top-0 right-0 m-4 text-gray-500 hover:text-gray-700"
+      >
+        &times;
+      </button>
+      <!-- Modal content goes here -->
+      <form
+        id="modalFormReply-{{.TweetID}}"
+        action="/tweets/ajax"
+        method="post"
+        class="flex flex-col items-start gap-6"
+        enctype="multipart/form-data"
+        onsubmit="submitReply(event, {{.TweetID}})"
+      >
+        <!-- CSRF token field -->
+        <div class="hidden">
+          {{ csrfField }}
+        </div>
+        <!-- Parent tweet ID -->
+        <input type="hidden" name="parentTweetID" value={{.TweetID}}>
+        <!-- Quoted tweet ID = 0 -->
+        <input type="hidden" name="quotedTweetID" value="0">
+        <!-- Tweet textarea -->
+        <label for="modalTweetReply" class="text-xl font-semibold"
+          >Reply</label
+        >
+        <textarea
+          id="modalTweetReply-{{.TweetID}}"
+          name="tweet"
+          class="w-full p-2 border border-gray-300 rounded focus:outline-none focus:border-black"
+          rows="3"
+          placeholder="Post your reply"
+          oninput="checkModalTextInput('Reply-{{.TweetID}}')"
+          onblur="clearModalCharCount('Reply-{{.TweetID}}')"
+          tabindex="1"
+        ></textarea>
+        <span id="modalCharCountReply-{{.TweetID}}" class="text-sm text-gray-500"></span>
+        <!-- Image input -->
+        <div class="py-2">
+          <label
+            for="modalImagesReply-{{.TweetID}}"
+            class="block mb-2 text-sm font-semibold text-gray-800"
+          >
+            Add Images
+            <p class="py-2 text-xs text-gray-600 font-normal">
+              Please only upload jpg, png, and gif files.
+            </p>
+          </label>
+          <input
+            type="file"
+            multiple
+            accept="image/png, image/jpeg, image/gif"
+            id="modalImagesReply-{{.TweetID}}"
+            name="images"
+            onchange="checkModalImageInput('Reply-{{.TweetID}}')"
+          />
+        </div>
+        <!-- Submit button -->
+        <button
+          id="modalSubmitBtnReply-{{.TweetID}}"
+          type="submit"
+          disabled
+          style="opacity: 0.5; cursor: not-allowed"
+          class="px-6 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 focus:outline-none focus:ring focus:border-blue-300"
+          tabindex="2"
+        >
+          Post
+        </button>
+      </form>
+    </div>
+{{ end }}
+
+{{define "overlay-modal-edit"}}
+    <!-- Modal Overlay Edit -->
+    <div
+      id="overlayEdit"
+      class="hidden fixed top-0 left-0 w-full h-full bg-black opacity-50"
+      onclick="toggleModalEdit()"
+    ></div>
+
+    <!-- Modal Edit-->
+    <div
+      id="myModalEdit"
+      class="hidden fixed w-1/3 top-16 left-1/2 transform -translate-x-1/2 bg-white p-8 shadow-lg z-50 rounded"
+    >
+      <button
+        type="button"
+        onclick="toggleModalEdit()"
+        class="absolute top-0 right-0 m-4 text-gray-500 hover:text-gray-700"
+      >
+        &times;
+      </button>
+      <!-- Modal content goes here -->
+      <div class="flex items-center justify-center mb-4">
+        <img
+          src="{{.ProfileImage}}"
+          alt="Profile Picture"
+          class="w-24 h-24 rounded-full"
+        />
+      </div>
+      <form
+        action="/{{.Username}}/profile-image"
+        method="post"
+        enctype="multipart/form-data"
+      >
+        <div class="mb-4">
+          <div class="hidden">
+            {{ csrfField }}
+          </div>
+          <label
+            for="profile-image"
+            class="block text-sm font-medium text-gray-700"
+            >Foto de perfil
+            <p class="py-2 text-xs text-gray-600 font-normal">
+              Solo archivos jpg, png y gif.
+            </p>
+          </label>
+          <input
+            type="file"
+            name="profile-image"
+            id="profile-image"
+            accept="image/png, image/jpeg, image/gif"
+          />
+        </div>
+
+        <div class="mt-4">
+          <label for="edit-name" class="block text-sm font-medium text-gray-700"
+            >Nombre</label
+          >
+          <input
+            type="text"
+            name="edit-name"
+            id="edit-name"
+            value="{{.Name}}"
+            class="mt-1 block w-full px-2 py-1 border rounded focus:outline-none focus:border-black"
+          />
+        </div>
+        <button
+          type="submit"
+          class="mt-4 bg-black text-white px-4 py-2 rounded-full shadow-md hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-opacity-50"
+        >
+          Guardar
+        </button>
+      </form>
+    </div>
+{{ end }}
+
+{{define "tweets"}}
+    {{if .Retweeted}} 
+      <div class="p-4 border-b border-gray-100 hover:bg-gray-100">
+        <div class="flex items-center">
+          <!-- Retweet button -->
+          <div>
+            <svg width="13" height="9" viewBox="0 0 13 9" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M10.4289 8.41305H9.77297V1.36958C9.77297 1.13479 9.64179 0.978272 9.44502 0.978272H5.42328V0.195663H9.44502C10.0025 0.195663 10.4289 0.704359 10.4289 1.36958V8.41305Z" fill="gray"/>
+              <path d="M10.1009 9L7.87084 5.94783L8.39556 5.4L10.1009 7.82608L11.8062 5.4L12.331 5.94783L10.1009 9ZM6.72597 8.80434H2.88601C2.3285 8.80434 1.90216 8.29565 1.90216 7.63043V0.58696H2.55806V7.63043C2.55806 7.86521 2.68924 8.02174 2.88601 8.02174H6.72597V8.80434Z" fill="gray"/>
+              <path d="M3.9354 3.6L2.23006 1.17391L0.52472 3.6L0 3.05217L2.23006 0L4.46011 3.05217L3.9354 3.6Z" fill="gray"/>
+            </svg>
+          </div>
+          <h3 class="text-sm font-semibold text-gray-500">You retweeted</h3>
+        </div>
+        <a href="/{{.Username}}/status/{{.TweetID}}" class="block">
+          <div class="flex items-center mb-2">
+            <img src="/{{.ProfileImage}}" alt="Profile Picture" class="w-8 h-8 rounded-full mr-2"/>
+            <div>
+              <div class="text-md font-semibold hover:underline hover:text-black" onclick="redirectToProfile(event, '{{.Username}}')">{{.Name}}</div>
+              <p class="text-sm text-gray-500">@{{.Username}} • {{.CreatedAt}}</p>
+            </div>
+          </div>
+          <p class="text-lg">{{.Text}}</p>
+          <!-- Render images -->
+          {{if .ImagesURL}}
+          <div class="flex flex-wrap mt-4">
+            {{ range.ImagesURL }}
+            <img
+              src="/{{.}}"
+              alt="Tweet Image"
+              class="w-32 h-32 object-cover mr-2 mb-2 rounded full"
+            />
+            {{ end }}
+          </div>
+          {{ end }}
+
+          <!-- Buttons -->
+          <div class="flex items-center mt-4">
+            <!-- Reply Button -->
+            <div class="flex items-center gap-1 cursor-pointer hover:bg-blue-100 rounded-full p-1 hover:text-blue-600" onclick="toggleModalReplyAjax(event, {{.TweetID}})">
+              <svg width="18" height="17" viewBox="0 0 18 17" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path fill-rule="evenodd" clip-rule="evenodd" d="M1.43123 11.5201C-0.874056 6.0193 3.28839 0 9.3972 0H9.72639C10.8129 0 11.8888 0.208073 12.8926 0.612339C13.8964 1.01661 14.8084 1.60915 15.5767 2.35613C16.345 3.10312 16.9544 3.98992 17.3702 4.9659C17.786 5.94189 18 6.98794 18 8.04434C18 10.4195 17.0296 12.6974 15.3022 14.3769C13.5748 16.0565 11.232 17 8.78909 17H0.769797C0.610457 17.0001 0.455007 16.9522 0.324928 16.8627C0.194848 16.7732 0.0965602 16.6467 0.0436466 16.5005C-0.00926697 16.3544 -0.0141942 16.1959 0.0295458 16.0469C0.0732859 15.8979 0.163534 15.7659 0.287819 15.6689L2.30905 14.0906C2.35227 14.0569 2.38311 14.0105 2.39698 13.9584C2.41084 13.9063 2.40698 13.8512 2.38596 13.8014L1.43123 11.5201ZM9.3972 1.4956C4.3795 1.4956 0.961563 6.43806 2.85461 10.9558L3.81036 13.2381C3.95598 13.586 3.98224 13.9703 3.88525 14.3339C3.78825 14.6975 3.57317 15.0209 3.27198 15.2561L2.95511 15.5044H8.78909C10.824 15.5044 12.7756 14.7184 14.2145 13.3194C15.6534 11.9204 16.4618 10.0229 16.4618 8.04434C16.4618 6.30751 15.7522 4.64181 14.489 3.41368C13.2259 2.18556 11.5127 1.4956 9.72639 1.4956H9.3972Z" fill="gray" />
+              </svg>
+              <span
+                id="repliesCountRet-{{.TweetID}}"class="text-gray-500 font-normal transition-colors duration-300">0</span>
+              <!-- Number of comments -->
+            </div>
+            <!-- Retweet button -->
+            <div id="retweetButton" class="flex items-center gap-1 cursor-pointer hover:bg-green-100 rounded-full p-1 hover:text-green-600" onclick="toggleRetweet(event, {{.TweetID}})">
+              <svg id="retweetIconRet-{{.TweetID}}" width="21" height="15" viewBox="0 0 21 15" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path class="retweet-path" d="M17.3814 14.0217H16.2882V2.28262C16.2882 1.89131 16.0696 1.63044 15.7417 1.63044H9.03876V0.326096H15.7417C16.6708 0.326096 17.3814 1.17392 17.3814 2.28262V14.0217Z" fill="gray"/>
+                <path class="retweet-path" d="M16.8348 15L13.118 9.91305L13.9926 9.00001L16.8348 13.0435L19.677 9.00001L20.5516 9.91305L16.8348 15ZM11.2099 14.6739H4.80998C3.88078 14.6739 3.17023 13.8261 3.17023 12.7174V0.978271H4.26339V12.7174C4.26339 13.1087 4.48203 13.3696 4.80998 13.3696H11.2099V14.6739Z" fill="gray"/>
+                <path class="retweet-path" d="M6.559 6L3.71676 1.95652L0.874533 6L0 5.08695L3.71676 0L7.43353 5.08695L6.559 6Z" fill="gray"/>
+              </svg>
+              <span
+                id="retweetCountRet-{{.TweetID}}"class="text-gray-500 font-normal transition-colors duration-300">0</span>
+            </div>
+            <!-- Like button -->
+            <div id="likeButton" class="flex items-center gap-1 cursor-pointer hover:bg-pink-100 rounded-full p-1 hover:text-pink-600" onclick="toggleLike(event, {{.TweetID}})">
+              <svg id="likeIconRet-{{.TweetID}}" width="20" height="18" viewBox="0 0 20 18" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path
+                  class="heart-path"
+                  d="M5.95 1C3.21625 1 1 3.29564 1 6.12731C1 11.2546 6.85 15.9158 10 17C13.15 15.9158 19 11.2546 19 6.12731C19 3.29564 16.7837 1 14.05 1C12.376 1 10.8955 1.86092 10 3.17864C9.54356 2.50519 8.93717 1.95559 8.23219 1.57635C7.52721 1.19712 6.74438 0.99942 5.95 1Z"
+                  stroke="gray"
+                  stroke-width="1.5"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                />
+              </svg>
+              <span
+                id="likeCountRet-{{.TweetID}}"class="text-gray-500 font-normal transition-colors duration-300">0</span>
+            </div>
+
+            <!-- Bookmarks Button -->
+            <div id="bookmarkButton" class="flex items-center gap-1 cursor-pointer hover:bg-blue-100 rounded-full p-1 hover:text-blue-600" onclick="toggleBookmark(event, {{.TweetID}})">
+              <svg id="bookmarkIcon-{{.TweetID}}" width="14" height="19" viewBox="0 0 14 19" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path class="bookmark-path" d="M11 1H3C2.46957 1 1.96086 1.19901 1.58579 1.55324C1.21071 1.90748 1 2.38792 1 2.88889V18L7 15.1667L13 18V2.88889C13 2.38792 12.7893 1.90748 12.4142 1.55324C12.0391 1.19901 11.5304 1 11 1Z" stroke="gray" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </div>
+          </div>
+          <!-- End of Buttons -->
+        </a>
+      </div>
+    {{else}}
+      <div class="p-4 border-b border-gray-50 hover:bg-gray-100">
+        <a href="/{{.Username}}/status/{{.TweetID}}" class="block">
+          <div class="flex items-center mb-2">
+            <img src="/{{.ProfileImage}}" alt="Profile Picture" class="w-8 h-8 rounded-full mr-2"/>
+            <div>
+              <div class="text-md font-semibold hover:underline hover:text-black" onclick="redirectToProfile(event, '{{.Username}}')">{{.Name}}</div>
+              <p class="text-sm text-gray-500">@{{.Username}} • {{.CreatedAt}}</p>
+            </div>
+          </div>
+          <p class="text-lg">{{.Text}}</p>
+          <!-- Render images -->
+          {{if .ImagesURL}}
+          <div class="flex flex-wrap mt-4">
+            {{ range.ImagesURL }}
+            <img
+              src="/{{.}}"
+              alt="Tweet Image"
+              class="w-32 h-32 object-cover mr-2 mb-2 rounded full"
+            />
+            {{ end }}
+          </div>
+          {{ end }}
+          <!-- Quoted tweet -->
+          {{if .QuotedTweetID}}
+            <div class ="mt-3">
+            {{template "quotedTweet" .QuotedTweet}}
+            </div>
+          {{end}}
+          <!-- Buttons -->
+          <div class="flex items-center mt-4">
+            <!-- Reply Button -->
+            <div class="flex items-center gap-1 cursor-pointer hover:bg-blue-100 rounded-full p-1 hover:text-blue-600" onclick="toggleModalReplyAjax(event, {{.TweetID}})">
+              <svg width="18" height="17" viewBox="0 0 18 17" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path fill-rule="evenodd" clip-rule="evenodd" d="M1.43123 11.5201C-0.874056 6.0193 3.28839 0 9.3972 0H9.72639C10.8129 0 11.8888 0.208073 12.8926 0.612339C13.8964 1.01661 14.8084 1.60915 15.5767 2.35613C16.345 3.10312 16.9544 3.98992 17.3702 4.9659C17.786 5.94189 18 6.98794 18 8.04434C18 10.4195 17.0296 12.6974 15.3022 14.3769C13.5748 16.0565 11.232 17 8.78909 17H0.769797C0.610457 17.0001 0.455007 16.9522 0.324928 16.8627C0.194848 16.7732 0.0965602 16.6467 0.0436466 16.5005C-0.00926697 16.3544 -0.0141942 16.1959 0.0295458 16.0469C0.0732859 15.8979 0.163534 15.7659 0.287819 15.6689L2.30905 14.0906C2.35227 14.0569 2.38311 14.0105 2.39698 13.9584C2.41084 13.9063 2.40698 13.8512 2.38596 13.8014L1.43123 11.5201ZM9.3972 1.4956C4.3795 1.4956 0.961563 6.43806 2.85461 10.9558L3.81036 13.2381C3.95598 13.586 3.98224 13.9703 3.88525 14.3339C3.78825 14.6975 3.57317 15.0209 3.27198 15.2561L2.95511 15.5044H8.78909C10.824 15.5044 12.7756 14.7184 14.2145 13.3194C15.6534 11.9204 16.4618 10.0229 16.4618 8.04434C16.4618 6.30751 15.7522 4.64181 14.489 3.41368C13.2259 2.18556 11.5127 1.4956 9.72639 1.4956H9.3972Z" fill="gray" />
+              </svg>
+              <span
+                id="repliesCount-{{.TweetID}}"class="text-gray-500 font-normal transition-colors duration-300">0</span>
+              <!-- Number of comments -->
+            </div>
+            <!-- Retweet button -->
+            <div id="retweetButton" class="flex items-center gap-1 cursor-pointer hover:bg-green-100 rounded-full p-1 hover:text-green-600" onclick="toggleModalRetQuote(event, {{.TweetID}})">
+              <svg id="retweetIcon-{{.TweetID}}" width="21" height="15" viewBox="0 0 21 15" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path class="retweet-path" d="M17.3814 14.0217H16.2882V2.28262C16.2882 1.89131 16.0696 1.63044 15.7417 1.63044H9.03876V0.326096H15.7417C16.6708 0.326096 17.3814 1.17392 17.3814 2.28262V14.0217Z" fill="gray"/>
+                <path class="retweet-path" d="M16.8348 15L13.118 9.91305L13.9926 9.00001L16.8348 13.0435L19.677 9.00001L20.5516 9.91305L16.8348 15ZM11.2099 14.6739H4.80998C3.88078 14.6739 3.17023 13.8261 3.17023 12.7174V0.978271H4.26339V12.7174C4.26339 13.1087 4.48203 13.3696 4.80998 13.3696H11.2099V14.6739Z" fill="gray"/>
+                <path class="retweet-path" d="M6.559 6L3.71676 1.95652L0.874533 6L0 5.08695L3.71676 0L7.43353 5.08695L6.559 6Z" fill="gray"/>
+              </svg>
+              <span
+                id="retweetCount-{{.TweetID}}"class="text-gray-500 font-normal transition-colors duration-300">0</span>
+            </div>
+            <!-- Like button -->
+            <div id="likeButton" class="flex items-center gap-1 cursor-pointer hover:bg-pink-100 rounded-full p-1 hover:text-pink-600" onclick="toggleLike(event, {{.TweetID}})">
+              <svg id="likeIcon-{{.TweetID}}" width="20" height="18" viewBox="0 0 20 18" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path
+                  class="heart-path"
+                  d="M5.95 1C3.21625 1 1 3.29564 1 6.12731C1 11.2546 6.85 15.9158 10 17C13.15 15.9158 19 11.2546 19 6.12731C19 3.29564 16.7837 1 14.05 1C12.376 1 10.8955 1.86092 10 3.17864C9.54356 2.50519 8.93717 1.95559 8.23219 1.57635C7.52721 1.19712 6.74438 0.99942 5.95 1Z"
+                  stroke="gray"
+                  stroke-width="1.5"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                />
+              </svg>
+              <span
+                id="likeCount-{{.TweetID}}"class="text-gray-500 font-normal transition-colors duration-300">0</span>
+            </div>
+            <!-- Bookmarks Button -->
+            <div id="bookmarkButton" class="flex items-center gap-1 cursor-pointer hover:bg-blue-100 rounded-full p-1 hover:text-blue-600" onclick="toggleBookmark(event, {{.TweetID}})">
+              <svg id="bookmarkIcon-{{.TweetID}}" width="14" height="19" viewBox="0 0 14 19" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path class="bookmark-path" d="M11 1H3C2.46957 1 1.96086 1.19901 1.58579 1.55324C1.21071 1.90748 1 2.38792 1 2.88889V18L7 15.1667L13 18V2.88889C13 2.38792 12.7893 1.90748 12.4142 1.55324C12.0391 1.19901 11.5304 1 11 1Z" stroke="gray" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </div>
+          </div>
+          <!-- End of Buttons -->
+        </a>
+      </div>
+    {{end}}
+{{ end }}
+
+{{define "quotedTweet"}}
+  <div class="p-4 border border-gray-100 hover:bg-gray-200 rounded">
+    <a href="/{{.Username}}/status/{{.TweetID}}" class="block">
+      <div class="flex items-center mb-2">
+        <img src="/{{.ProfileImage}}" alt="Profile Picture" class="w-8 h-8 rounded-full mr-2"/>
+        <div>
+          <div class="text-md font-semibold hover:underline hover:text-black" onclick="redirectToProfile(event, '{{.Username}}')">{{.Name}}</div>
+          <p class="text-sm text-gray-500">@{{.Username}} • {{.CreatedAt}}</p>
+        </div>
+      </div>
+      <p class="text-lg">{{.Text}}</p>
+      <!-- Render images -->
+      {{if .ImagesURL}}
+      <div class="flex flex-wrap mt-4">
+        {{ range .ImagesURL }}
+        <img
+          src="/{{.}}"
+          alt="Tweet Image"
+          class="w-32 h-32 object-cover mr-2 mb-2 rounded full"
+        />
+        {{ end }}
+      </div>
+      {{ end }}
+    </a>
+  </div>
+{{end}}
+
+{{define "followers"}}
+    <div class="hover:bg-gray-100">
+      <a href="/{{.Username}}" class="block">
+        <div class="p-4 border-b border-gray-100">
+          <div class="flex items-start justify-between">
+            <div class="flex items-center mb-2">
+              <img
+                src="/{{.ProfileImage}}"
+                alt="Profile Picture"
+                class="w-8 h-8 rounded-full mr-2"
+              />
+              <div>
+                <h3 class="text-md font-semibold hover:underline hover:text-black cursor-pointer">{{.Name}}</h3>
+                <p class="text-sm text-gray-500">@{{.Username}}</p>
+              </div>
+            </div>
+            {{if .IsOwnProfile}}
+            {{else}}
+            <!-- Follow Button -->
+            {{if .IsFollowing}}
+              <div class="mt-1">
+                <form action="/unfollowing" method="post" onsubmit="">
+                  <div class="hidden">
+                    {{ csrfField }}
+                  </div>
+                  <input type="hidden" name="username" value="{{.Username}}" />
+                  <button
+                    id="isFollowingBtn-{{.Username}}"
+                    onmouseover="followingToggle(true, {{.Username}})"
+                    onmouseout="followingToggle(false, {{.Username}})"
+                    type="submit"
+                    class="text-black font-semibold border border-black px-4 py-1 rounded-full shadow-sm hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-black focus:ring-opacity-50 cursor-pointer"
+                  >
+                    Following
+                  </button>
+                </form>
+              </div>
+            {{else}}
+              <div class="mt-1">
+                <form action="/following" method="post" onsubmit="">
+                  <div class="hidden">
+                    {{ csrfField }}
+                  </div>
+                  <input type="hidden" name="username" value="{{.Username}}" />
+                  <button
+                    type="submit"
+                    class="text-white bg-black font-semibold px-4 py-1 rounded-full shadow-sm hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-black focus:ring-opacity-50 cursor-pointer"
+                  >
+                    Follow
+                  </button>
+                </form>
+              </div>
+              {{ end }}
+            {{ end }}
+          </div>
+        </div>
+      </a>
+    </div>
+{{ end }}
+
+{{define "following"}}
+    <div class="hover:bg-gray-100">
+      <a href="/{{.Username}}" class="block">
+        <div class="p-4 border-b border-gray-100">
+          <div class="flex items-start justify-between">
+            <div class="flex items-center mb-2">
+              <img
+                src="/{{.ProfileImage}}"
+                alt="Profile Picture"
+                class="w-8 h-8 rounded-full mr-2"
+              />
+              <div>
+                <h3
+                  class="text-md font-semibold hover:underline hover:text-black cursor pointer"
+                >
+                  {{.Name}}
+                </h3>
+                <p class="text-sm text-gray-500">@{{.Username}}</p>
+              </div>
+            </div>
+            {{if .IsOwnProfile}}
+            {{else}}
+            <!-- Follow Button -->
+            {{if .IsFollowing}}
+            <div class="mt-1">
+              <form action="/unfollowing" method="post" onsubmit="">
+                <div class="hidden">
+                  {{ csrfField }}
+                </div>
+                <input type="hidden" name="username" value="{{.Username}}" />
+                <button
+                  id="isFollowingBtn-{{.Username}}"
+                  onmouseover="followingToggle(true, {{.Username}})"
+                  onmouseout="followingToggle(false, {{.Username}})"
+                  type="submit"
+                  class="text-black font-semibold border border-black px-4 py-1 rounded-full shadow-sm hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-black focus:ring-opacity-50 cursor-pointer"
+                >
+                  Following
+                </button>
+              </form>
+            </div>
+            {{else}}
+            <div class="mt-1">
+              <form action="/following" method="post" onsubmit="">
+                <div class="hidden">
+                  {{ csrfField }}
+                </div>
+                <input type="hidden" name="username" value="{{.Username}}" />
+                <button
+                  type="submit"
+                  class="text-white bg-black font-semibold px-4 py-1 rounded-full shadow-sm hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-black focus:ring-opacity-50 cursor-pointer"
+                >
+                  Follow
+                </button>
+              </form>
+            </div>
+            {{ end }}
+            {{ end }}
+          </div>
+        </div>
+      </a>
+    </div>
+{{ end }}
+
+{{define "footer"}}
+    <script>
+      function redirectToProfile(event, username) {
+        event.preventDefault();
+        window.location.href = `/${username}`;
+      }
+
+      function toggleModal() {
+        var modal = document.getElementById("myModal");
+        var overlay = document.getElementById("overlay");
+        var formModal = document.getElementById("modalForm");
+        var textArea = formModal.querySelector("textarea");
+        if (textArea) {
+          setTimeout(function () {
+            textArea.focus();
+          }, 100);
+        }
+        // Toggle the display of the modal and overlay
+        modal.classList.toggle("hidden");
+        overlay.classList.toggle("hidden");
+      }
+
+      function toggleModalPostQuote(event, tweetID) {
+        toggleModalRetQuote(event, tweetID)
+        {{/* var modalPrevForm = document.getElementById("myModalRetQuote-"+tweetID);
+        var overlayPrevForm = document.getElementById("overlayRetQuote-"+tweetID);        
+        // Toggle the display of the modal and overlay
+        modalPrevForm.classList.toggle("hidden");
+        overlayPrevForm.classList.toggle("hidden"); */}}
+
+
+
+        var modal = document.getElementById("myModalPostQuote-"+tweetID);
+        var overlay = document.getElementById("overlayPostQuote-"+tweetID);
+        var formModal = document.getElementById("modalFormPostQuote-"+tweetID);
+        var textArea = formModal.querySelector("textarea");
+        if (textArea) {
+          setTimeout(function () {
+            textArea.focus();
+          }, 100);
+        }
+        // Toggle the display of the modal and overlay
+        console.log("modal post quote: ", modal)
+        modal.classList.toggle("hidden");
+        overlay.classList.toggle("hidden");
+      }
+      
+      function toggleModalRetQuote(event, tweetID) {
+        event.preventDefault();
+        var modal = document.getElementById("myModalRetQuote-"+tweetID);
+        var overlay = document.getElementById("overlayRetQuote-"+tweetID);        
+        // Toggle the display of the modal and overlay
+        modal.classList.toggle("hidden");
+        overlay.classList.toggle("hidden");
+      }
+
+      function toggleModalReplySingleTweet() {
+        var modal = document.getElementById("myModalReply");
+        var overlay = document.getElementById("overlayReply");
+        var formModal = document.getElementById("modalFormReply");
+        var textArea = formModal.querySelector("textarea");
+        if (textArea) {
+          setTimeout(function () {
+            textArea.focus();
+          }, 100);
+        }
+        // Toggle the display of the modal and overlay
+        modal.classList.toggle("hidden");
+        overlay.classList.toggle("hidden");
+      }
+      
+      function toggleModalReplyAjax(event, tweetID) {
+        event.preventDefault();
+        var modal = document.getElementById("myModalReplyAjax-"+tweetID);
+        console.log(modal)
+        var overlay = document.getElementById("overlayReplyAjax-"+tweetID);
+        console.log(overlay)
+
+        var formModal = document.getElementById("modalFormReply-"+tweetID);
+        var textArea = formModal.querySelector("textarea");
+        if (textArea) {
+          setTimeout(function () {
+            textArea.focus();
+          }, 100);
+        }
+        // Toggle the display of the modal and overlay
+        modal.classList.toggle("hidden");
+        overlay.classList.toggle("hidden");
+      }
+
+      function toggleModalEdit() {
+        var modalEdit = document.getElementById("myModalEdit");
+        var overlayEdit = document.getElementById("overlayEdit");
+        var formModalEdit = document.getElementById("modalFormEdit");
+        // Toggle the display of the modal and overlay
+        modalEdit.classList.toggle("hidden");
+        overlayEdit.classList.toggle("hidden");
+      }
+
+      function closeAlert(event) {
+        let closeable = event.target.closest(".closeable");
+        closeable.remove();
+        // closeable.classList.add("hidden");
+      }
+
+      function checkTextInput() {
+        var tweetInput = document.getElementById("tweet");
+        var charCountSpan = document.getElementById("charCount");
+        var maxChars = 280;
+        var inputLength = tweetInput.value.length;
+        charCountSpan.textContent = inputLength + "/" + maxChars;
+        checkSubmitButton();
+      }
+
+      function clearCharCount() {
+        var charCountSpan = document.getElementById("charCount");
+        charCountSpan.textContent = ""; // Clear the content when the cursor leaves the textarea
+      }
+
+      function checkImageInput() {
+        var imagesInput = document.getElementById("images");
+        var selectedImages = imagesInput.files.length;
+        var maxImages = 4;
+
+        // Check if the number of selected images exceeds the limit
+        if (selectedImages > maxImages) {
+          alert("You can only upload a maximum of 4 images.");
+          imagesInput.value = ""; // Clear the selected files
+        }
+        checkSubmitButton();
+      }
+
+      function checkSubmitButton() {
+        var tweetInput = document.getElementById("tweet");
+        var imagesInput = document.getElementById("images");
+        var submitBtn = document.getElementById("submitBtn");
+        var charCountSpan = document.getElementById("charCount");
+        var maxChars = 280;
+        var inputLength = tweetInput.value.length;
+        var hasImages = imagesInput.files.length > 0;
+
+        if (inputLength > maxChars || (inputLength === 0 && !hasImages)) {
+          charCountSpan.style.color = "red";
+          submitBtn.disabled = true;
+          submitBtn.style.opacity = "0.5";
+          submitBtn.style.cursor = "not-allowed";
+        } else {
+          charCountSpan.style.color = "inherit";
+          submitBtn.disabled = false;
+          submitBtn.style.opacity = "1";
+          submitBtn.style.cursor = "pointer";
+        }
+      }
+
+      function checkModalTextInput(param) {
+        var tweetInput = document.getElementById("modalTweet"+param);
+        var charCountSpan = document.getElementById("modalCharCount"+param);
+        var maxChars = 280;
+        var inputLength = tweetInput.value.length;
+        charCountSpan.textContent = inputLength + "/" + maxChars;
+        checkModalSubmitButton(param);
+      }
+
+      function clearModalCharCount(param) {
+        var charCountSpan = document.getElementById("modalCharCount"+param);
+        charCountSpan.textContent = ""; // Clear the content when the cursor leaves the textarea
+      }
+
+      function checkModalImageInput(param) {
+        var imagesInput = document.getElementById("modalImages"+param);
+        var selectedImages = imagesInput.files.length;
+        var maxImages = 4;
+
+        // Check if the number of selected images exceeds the limit
+        if (selectedImages > maxImages) {
+          alert("You can only upload a maximum of 4 images.");
+          imagesInput.value = ""; // Clear the selected files
+        }
+        checkModalSubmitButton(param);
+      }
+
+      function checkModalSubmitButton(param) {
+        var tweetInput = document.getElementById("modalTweet"+param);
+        var charCountSpan = document.getElementById("modalCharCount"+param);
+        var imagesInput = document.getElementById("modalImages"+param);
+        var submitBtn = document.getElementById("modalSubmitBtn"+param);
+        var maxChars = 280;
+        var inputLength = tweetInput.value.length;
+        var hasImages = imagesInput.files.length > 0;
+
+        if (inputLength > maxChars || (inputLength === 0 && !hasImages)) {
+          charCountSpan.style.color = "red";
+          submitBtn.disabled = true;
+          submitBtn.style.opacity = "0.5";
+          submitBtn.style.cursor = "not-allowed";
+        } else {
+          charCountSpan.style.color = "inherit";
+          submitBtn.disabled = false;
+          submitBtn.style.opacity = "1";
+          submitBtn.style.cursor = "pointer";
+        }
+      }
+
+      function followingToggle(isHover, username) {
+        var isFollowingBtn = document.getElementById(
+          `isFollowingBtn-${username}`
+        );
+        if (isFollowingBtn) {
+          if (isHover) {
+            isFollowingBtn.textContent = "Unfollow";
+            isFollowingBtn.style.color = "red";
+            isFollowingBtn.style.backgroundColor = "#FFC0CB";
+            isFollowingBtn.style.borderColor = "red";
+          } else {
+            isFollowingBtn.textContent = "Following";
+            isFollowingBtn.style.color = "";
+            isFollowingBtn.style.backgroundColor = "";
+            isFollowingBtn.style.borderColor = "";
+          }
+        } else {
+          console.log("Button with id 'isFollowingBtn' not found.");
+        }
+      }
+
+      function goBack() {
+        window.history.back();
+      }
+
+      function validateForm() {
+        // Additional validation logic can be added here if needed
+        return true; // Allow form submission
+      }
+
+      async function toggleLike(event, tweetID) {
+        event.preventDefault();
+        var likeIcon = document.getElementById("likeIcon-" + tweetID);
+        var likeCount = document.getElementById("likeCount-" + tweetID);
+        var heartPath = likeIcon.querySelector(".heart-path");
+        
+
+        // Get CSRF token from the hidden input field
+        var csrfToken = document.querySelector(
+          'input[name="gorilla.csrf.Token"]'
+        ).value;
+
+        try {
+          // Send an AJAX request to like/unlike the tweet using fetch
+          const response = await fetch("/like-dislike-tweet", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "X-CSRF-Token": csrfToken, // Include CSRF token in the request headers
+            },
+            body: JSON.stringify({ tweetID: tweetID }),
+          });
+
+          // Check if the request was successful
+          if (response.ok) {
+            // styles
+            likeIcon.classList.toggle("text-pink-600");
+            likeIcon.classList.toggle("fill-current");
+            likeCount.classList.toggle("text-pink-600");
+            if (heartPath.getAttribute("stroke") === "gray") {
+              heartPath.setAttribute("stroke", "");
+            } else {
+              heartPath.setAttribute("stroke", "gray");
+            }
+
+            // Update the like count
+            const responseData = await response.json();
+            likeCount.textContent = responseData.likeCount;
+            // is retweeted
+            if (responseData.isRetweeted) {
+              var likeIconRet = document.getElementById("likeIconRet-" + tweetID);
+              var likeCountRet = document.getElementById("likeCountRet-" + tweetID);
+              var heartPathRet = likeIconRet.querySelector(".heart-path");
+              // Retweet
+              if (likeIconRet && likeCountRet && heartPathRet) {
+                likeIconRet.classList.toggle("text-pink-600");
+                likeIconRet.classList.toggle("fill-current");
+                likeCountRet.classList.toggle("text-pink-600");
+                if (heartPathRet.getAttribute("stroke") === "gray") {
+                  heartPathRet.setAttribute("stroke", "");
+                } else {
+                  heartPathRet.setAttribute("stroke", "gray");
+                }
+              }
+              likeCountRet.textContent = responseData.likeCount;
+            }
+
+            console.log("Like toggled successfully");
+          } else {
+            console.error("Failed to like/unlike the tweet");
+            console.log(await response.text());
+          }
+        } catch (error) {
+          console.error("Error occurred:", error);
+        }
+      }
+      
+      async function toggleBookmark(event, tweetID) {
+        event.preventDefault();
+        var bookmarkIcon = document.getElementById("bookmarkIcon-" + tweetID);
+        var bookmarkPath = bookmarkIcon.querySelector(".bookmark-path");
+        
+        // Get CSRF token from the hidden input field
+        var csrfToken = document.querySelector(
+          'input[name="gorilla.csrf.Token"]'
+        ).value;
+
+        try {
+          // Send an AJAX request to like/unlike the tweet using fetch
+          const response = await fetch("/bookmark", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "X-CSRF-Token": csrfToken, // Include CSRF token in the request headers
+            },
+            body: JSON.stringify({ tweetID: tweetID }),
+          });
+
+          // Check if the request was successful
+          if (response.ok) {
+            // styles
+            bookmarkIcon.classList.toggle("text-blue-500");
+            bookmarkIcon.classList.toggle("fill-current");
+            if (bookmarkPath.getAttribute("stroke") === "gray") {
+              bookmarkPath.setAttribute("stroke", "");
+            } else {
+              bookmarkPath.setAttribute("stroke", "gray");
+            }
+
+            console.log("Bookmark toggled successfully");
+          } else {
+            console.error("Failed to bookmark the tweet");
+            console.log(await response.text());
+          }
+        } catch (error) {
+          console.error("Error occurred:", error);
+        }
+      }
+
+      async function toggleRetweet(event, tweetID) {
+        event.preventDefault();
+        var retweetIcon = document.getElementById("retweetIcon-" + tweetID);
+        var retweetCount = document.getElementById("retweetCount-" + tweetID);
+        var retweetPath = retweetIcon.querySelectorAll(".retweet-path");
+        // Get CSRF token from the hidden input field
+        var csrfToken = document.querySelector(
+          'input[name="gorilla.csrf.Token"]'
+        ).value;
+
+        try {
+          // Send an AJAX request to like/unlike the tweet using fetch
+          const response = await fetch("/retweet", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "X-CSRF-Token": csrfToken, // Include CSRF token in the request headers
+            },
+            body: JSON.stringify({ tweetID: tweetID }),
+          });
+
+          // Check if the request was successful
+          if (response.ok) {
+            // styles
+            retweetIcon.classList.toggle("text-green-500");
+            retweetCount.classList.toggle("text-green-500");
+            // Iterate over each retweet path and update its stroke color
+            retweetPath.forEach(path => {
+                if (path.getAttribute("fill") === "gray") {
+                    path.setAttribute("fill", "#00ba7c");
+                } else {
+                    path.setAttribute("fill", "gray");
+                }
+            });
+
+            // Update the like count
+            const responseData = await response.json();
+            retweetCount.textContent = responseData.retweetsCount;
+            if (responseData.isRetweeted) {
+              var retweetIconRet = document.getElementById("retweetIconRet-" + tweetID);
+              var retweetCountRet = document.getElementById("retweetCountRet-" + tweetID);
+              var retweetPathRet = retweetIconRet.querySelectorAll(".retweet-path");
+              // styles
+              retweetIconRet.classList.toggle("text-green-500");
+              retweetCountRet.classList.toggle("text-green-500");
+              // Iterate over each retweet path and update its stroke color
+              retweetPathRet.forEach(path => {
+                  if (path.getAttribute("fill") === "gray") {
+                      path.setAttribute("fill", "#00ba7c");
+                  } else {
+                      path.setAttribute("fill", "gray");
+                  }
+              });
+              retweetCountRet.textContent = responseData.retweetsCount;
+            }
+            window.location.reload();
+
+            console.log("Retweet toggled successfully");
+          } else {
+            console.error("Failed to retweet");
+            console.log(await response.text());
+          }
+        } catch (error) {
+          console.error("Error occurred:", error);
+        }
+      }
+
+      // Function to fetch the number of likes for a tweet
+      async function fetchTweetDataCount(tweetID) {
+        try {
+          // Send an AJAX request to retrieve the like count
+          const response = await fetch(
+            `/get-tweet-data-count?tweetID=${tweetID}`
+          );
+          if (!response.ok) {
+            throw new Error("Failed to fetch tweet like count");
+          }
+
+          // Parse the JSON response
+          const data = await response.json();
+
+          // Return like count
+          return data;
+        } catch (error) {
+          console.error("Error fetching tweet like count", error);
+          return null;
+        }
+      }
+
+      async function submitReply(event, tweetID) {
+        event.preventDefault();
+
+        var replyTextarea = document.getElementById("modalTweetReply-" + tweetID);
+        var imagesInput = document.getElementById("modalImagesReply-" + tweetID);
+        var submitBtn = document.getElementById("modalSubmitBtnReply-" + tweetID);
+        var replyCountSpan = document.getElementById("repliesCount-" + tweetID);
+                
+
+        // Get CSRF token from the hidden input field
+        var csrfToken = document.querySelector('input[name="gorilla.csrf.Token"]').value;
+
+        // Create form data object
+        var formData = new FormData();
+        formData.append("parentTweetID", tweetID);
+        formData.append("quotedTweetID", "0");
+        formData.append("tweet", replyTextarea.value);
+        for (const file of imagesInput.files) {
+            formData.append("images", file);
+        }
+
+        try {
+            // Send AJAX request to submit the reply form
+            const response = await fetch("/tweets/ajax", {
+                method: "POST",
+                headers: {
+                    "X-CSRF-Token": csrfToken, // Include CSRF token in the request headers
+                },
+                body: formData,
+            });
+
+            // Check if the request was successful
+            if (response.ok) {
+                // Reset form fields
+                replyTextarea.value = "";
+                imagesInput.value = "";
+
+                // Update UI as needed
+                toggleModalReplyAjax(event, tweetID)
+                // Update the like count
+                const responseData = await response.json();
+                replyCountSpan.textContent = responseData.repliesCount;
+                
+                console.log("Reply submitted successfully");
+            } else {
+                console.error("Failed to submit the reply");
+                console.log(await response.text());
+            }
+        } catch (error) {
+            console.error("Error occurred:", error);
+        }
+      }
+
+      async function submitTweet(event, username) {
+        event.preventDefault();
+
+        var replyTextarea = document.getElementById("modalTweet");
+        var imagesInput = document.getElementById("modalImages");
+        var submitBtn = document.getElementById("modalSubmitBtn");
+
+        // Get CSRF token from the hidden input field
+        var csrfToken = document.querySelector('input[name="gorilla.csrf.Token"]').value;
+
+        // Create form data object
+        var formData = new FormData();
+        formData.append("parentTweetID", "0");
+        formData.append("quotedTweetID", "0");
+        formData.append("tweet", replyTextarea.value);
+        for (const file of imagesInput.files) {
+            formData.append("images", file);
+        }
+
+        try {
+            // Send AJAX request to submit the reply form
+            const response = await fetch("/tweets/ajax", {
+                method: "POST",
+                headers: {
+                    "X-CSRF-Token": csrfToken, // Include CSRF token in the request headers
+                },
+                body: formData,
+            });
+
+            // Check if the request was successful
+            if (response.ok) {
+                // Reset form fields
+                replyTextarea.value = "";
+                imagesInput.value = "";
+
+                // Update UI as needed
+                toggleModal()
+                // Update the like count
+                // Reload the page if the URL path is '/home'
+                if (window.location.pathname === '/home') {
+                    window.location.reload();
+                } else if (window.location.pathname === `/${username}`) {
+                    window.location.reload();
+                }
+            } else {
+                console.error("Failed to submit the reply");
+                console.log(await response.text());
+            }
+        } catch (error) {
+            console.error("Error occurred:", error);
+        }
+      }
+
+      async function submitQuoteTweet(event, tweetID) {
+        event.preventDefault();
+
+        var replyTextarea = document.getElementById("modalTweetPostQuote-"+tweetID);
+        var imagesInput = document.getElementById("modalImagesPostQuote-"+tweetID);
+        var submitBtn = document.getElementById("modalSubmitBtnPostQuote-"+tweetID);
+
+        // Get CSRF token from the hidden input field
+        var csrfToken = document.querySelector('input[name="gorilla.csrf.Token"]').value;
+
+        // Create form data object
+        var formData = new FormData();
+        formData.append("parentTweetID", "0");
+        formData.append("quotedTweetID", tweetID);
+        formData.append("tweet", replyTextarea.value);
+        for (const file of imagesInput.files) {
+            formData.append("images", file);
+        }
+
+        try {
+            // Send AJAX request to submit the reply form
+            const response = await fetch("/tweets/ajax", {
+                method: "POST",
+                headers: {
+                    "X-CSRF-Token": csrfToken, // Include CSRF token in the request headers
+                },
+                body: formData,
+            });
+
+            // Check if the request was successful
+            if (response.ok) {
+                // Reset form fields
+                replyTextarea.value = "";
+                imagesInput.value = "";
+
+                // Update UI as needed
+                toggleModalPostQuote(event, tweetID)
+                // Update the like count
+                // Reload the page if the URL path is '/home'
+                if (window.location.pathname === '/home') {
+                    window.location.reload();
+                } 
+            } else {
+                console.error("Failed to submit the reply");
+                console.log(await response.text());
+            }
+        } catch (error) {
+            console.error("Error occurred:", error);
+        }
+      }
+
+
+      // Function to fetch the number of likes for a tweet when the page is loaded
+      document.addEventListener("DOMContentLoaded", function () {
+        // Use a Set to store unique tweet IDs
+        var tweetIDs = new Set([
+            {{range .TweetIDs}}
+                {{.}},
+            {{end}}
+        ]);
+
+        // Convert Set to an array
+        tweetIDs = Array.from(tweetIDs);
+        // fetch the number of likes
+        tweetIDs.forEach(function (tweetID) {
+          fetchTweetDataCount(tweetID)
+            .then((data) => {
+              if (data !== null) {
+                // Set the number of likes
+                var likeCountSpan = document.getElementById(
+                  "likeCount-" + tweetID
+                );
+                if (likeCountSpan) {
+                  likeCountSpan.textContent = data.likeCount;
+                }
+                // Retweeted like icon
+                var likeCountSpanRet = document.getElementById("likeCountRet-" + tweetID);
+                if (likeCountSpanRet) {
+                  likeCountSpanRet.textContent = data.likeCount;
+                }
+                var retweetCountSpan = document.getElementById(
+                  "retweetCount-" + tweetID
+                );
+                if (retweetCountSpan) {
+                  retweetCountSpan.textContent = data.retweetsCount;
+                }
+                var retweetCountSpanRet = document.getElementById(
+                  "retweetCountRet-" + tweetID
+                );
+                if (retweetCountSpanRet) {
+                  retweetCountSpanRet.textContent = data.retweetsCount;
+                }
+
+                var replyCountSpan = document.getElementById(
+                  "repliesCount-" + tweetID
+                );
+                if (replyCountSpan) {
+                  replyCountSpan.textContent = data.repliesCount
+                }
+                // Turn pink the like button
+                if (data.existingLike) {
+                  var likeIcon = document.getElementById("likeIcon-" + tweetID);
+                  var likeCount = document.getElementById("likeCount-" + tweetID);
+                  var heartPath = likeIcon.querySelector(".heart-path");
+
+                  if (likeIcon && likeCount && heartPath) {
+                    likeIcon.classList.toggle("text-pink-600");
+                    likeIcon.classList.toggle("fill-current");
+                    likeCount.classList.toggle("text-pink-600");
+                    if (heartPath.getAttribute("stroke") === "gray") {
+                      heartPath.setAttribute("stroke", "");
+                    } else {
+                      heartPath.setAttribute("stroke", "gray");
+                    }
+                  }
+                  if (data.isRetweeted) {
+                    console.log("Is retweeted",tweetID)
+                    // Like icon
+                    var likeIconRet = document.getElementById("likeIconRet-" + tweetID);
+                    var likeCountRet = document.getElementById("likeCountRet-" + tweetID);
+                    console.log("icon ret: ", likeIconRet)
+                    console.log("count ret: ", likeCountRet)
+                    var heartPathRet = likeIconRet.querySelector(".heart-path");
+                    if (likeIconRet && likeCountRet && heartPathRet) {
+                      likeIconRet.classList.toggle("text-pink-600");
+                      likeIconRet.classList.toggle("fill-current");
+                      likeCountRet.classList.toggle("text-pink-600");
+                      if (heartPathRet.getAttribute("stroke") === "gray") {
+                        heartPathRet.setAttribute("stroke", "");
+                      } else {
+                        heartPathRet.setAttribute("stroke", "gray");
+                      }
+                    } else {
+                      console.log("no problem")
+                    }
+                  }
+                }
+                // Turn red the retweet button
+                if (data.isRetweeted) {
+                  var replyCountSpanRet = document.getElementById(
+                    "repliesCountRet-" + tweetID
+                  );
+                  if (replyCountSpanRet) {
+                    replyCountSpanRet.textContent = data.repliesCount
+                  }
+                  // Retweet icon
+                  var retweetIcon = document.getElementById("retweetIcon-" + tweetID);
+                  var retweetCount = document.getElementById("retweetCount-" + tweetID);
+                  var retweetPath = retweetIcon.querySelectorAll(".retweet-path");
+
+                  if (retweetIcon && retweetCount && retweetPath) {
+                    retweetIcon.classList.toggle("text-green-500");
+                    retweetCount.classList.toggle("text-green-500");
+                    retweetPath.forEach(path => {
+                      if (path.getAttribute("fill") === "gray") {
+                          path.setAttribute("fill", "#00ba7c");
+                      } else {
+                          path.setAttribute("fill", "gray");
+                      }
+                    });
+                  }
+                  var retweetIconRet = document.getElementById("retweetIconRet-" + tweetID);
+                  var retweetCountRet = document.getElementById("retweetCountRet-" + tweetID);
+                  var retweetPathRet = retweetIconRet.querySelectorAll(".retweet-path");
+
+                  if (retweetIconRet && retweetCountRet && retweetPathRet) {
+                    retweetIconRet.classList.toggle("text-green-500");
+                    retweetCountRet.classList.toggle("text-green-500");
+                    retweetPathRet.forEach(path => {
+                      if (path.getAttribute("fill") === "gray") {
+                          path.setAttribute("fill", "#00ba7c");
+                      } else {
+                          path.setAttribute("fill", "gray");
+                      }
+                    });
+                  }
+                }
+                // Bookmarked
+                if(data.isBookmarked) {
+                  var bookmarkIcon = document.getElementById("bookmarkIcon-" + tweetID);
+                  var bookmarkPath = bookmarkIcon.querySelector(".bookmark-path");
+                  bookmarkIcon.classList.toggle("text-blue-500");
+                  bookmarkIcon.classList.toggle("fill-current");
+                  if (bookmarkPath.getAttribute("stroke") === "gray") {
+                    bookmarkPath.setAttribute("stroke", "");
+                  } else {
+                    bookmarkPath.setAttribute("stroke", "gray");
+                  }
+                }
+              }
+            })
+            .catch((error) => {
+              console.error(
+                "Error fetching like count for tweet ID " + tweetID + ":",
+                error
+              );
+            });
+        });
+      });
+    </script>
+  </body>
+</html>
+{{ end }}

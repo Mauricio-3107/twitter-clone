@@ -1,0 +1,59 @@
+{{template "header" .}}
+  <div class="flex items-center justify-center h-screen bg-gray-100">
+    <div class="bg-white p-8 rounded shadow-md">
+      <h2 class="text-2xl font-semibold mb-6">Restaura tu contrseña</h2>
+
+      <form action="/reset-pw" method="post">
+        <div class="hidden">
+          {{csrfField}}
+        </div>
+          <div class="mb-4">
+            <label for="password" class="block text-gray-600">Contraseña Nueva</label>
+            <input
+              type="password"
+              id="password"
+              name="password"
+              class="w-full px-4 py-2 border rounded focus:outline-none focus:border-black"
+              autofocus
+            />
+          </div>
+        {{if .Token}}
+            <div class="hidden">
+              <input type="hidden" id="token" name="token" value="{{.Token}}" />
+            </div>
+        {{else}}
+          <div class="mb-4">
+            <label for="token" class="block text-gray-600"
+              >Password Reset Token</label
+            >
+            <input
+              name="token"
+              id="token"
+              type="text"
+              placeholder="Check your email"
+              required
+              class="w-full px-4 py-2 border rounded focus:outline-none focus:border-black"
+            />
+          </div>
+        {{end}}
+
+          <button
+            type="submit"
+            class="bg-black text-white mt-4 px-4 py-3 rounded w-full hover:bg-gray-900 focus:outline-none"
+          >
+            Actualizar contraseña
+          </button>
+          <div class="mt-8 w-full flex justify-between">
+            <p class="text-xs text-gray-500">
+              <a href="/signup" class="underline">Regístrate</a>
+            </p>
+            <p class="text-xs text-gray-500">
+              <a href="/signin" class="underline">Iniciar sesión</a>
+            </p>
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
+{{template "footer" .}}
+

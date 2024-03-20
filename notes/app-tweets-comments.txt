@@ -1,0 +1,46 @@
+The functionality is that you open a modal each time you will press the comment button.
+Table
+You will need another table, which will need to have the:
+tweet_id (Referencing), username_lower (Referencing), the reply id (if null is a top level reply), text and timestamp
+
+
+Backend
+1. Create the create reply service and the delete reply service
+2. Create the create handler reply and the delte handler reply
+
+1.1. Create service
+You will need to recieve the tweet_id, the username_lower, parent_reply_id
+
+
+1. Create the modal and the form to reply to a tweet.
+2. Create the endpoint and its handler to handle the reply
+3. Create in the DB the reply of the tweet
+
+
+1.2 Retrieve Replies
+Service
+1.2.1 You have to enter the tweet id and retrieve all the replies of this tweet.
+
+Controllers
+1.2.1 query to the service for all the replies and pass it to the views as a slice of replies.
+
+Views
+1.2.1 Iterate over all the replies of a tweet.
+
+Frontend
+
+The button has has to open the modal
+Inside the modal will be the form
+Create the endpoint from the form in the main.go
+
+1. Number of replies
+Service
+1.1 Query to the DB for the number of replies a certain tweet has
+
+Controllers
+1.1 Retrive the number of queries from the service and pass to the views
+
+Replies:
+they are basically just tweets that have to be filter based on the parent_tweet_id
+
+You will have to manage with AJAX the replies on the feed

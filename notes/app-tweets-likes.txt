@@ -1,0 +1,27 @@
+Likes
+SQL Table
+tweet_id, username
+
+Models
+- Insert the username and the tweet_id
+
+Controllers
+- Handle this form that it is like a switch, when is off and pressed is on, and viceversa.
+
+Views
+- Add the button and their effects. It is basically an endpoint (Post, /likes)
+- You send the fields to the endpoint, then this handler of this endpoint process it. But it has to process it according to the desired action. You just have 2 actions in here. Like and Dislike. So you need a way to determine if the user is liking or disliking.
+First make it work for liking:
+1. The user press the button which is in gray and it submits the tweetID, the username (you retrieve from the context) and it has to return the number of likes of the tweet so you increase it in the frontend.
+
+
+Tweet form
+The user can send:
+1. Text and no image
+2. Text and images
+3. No text and images
+
+No text and no images the form can't be sent.
+
+Fetch the number of likes of a tweet
+you will have to make a request to the db every time the page is loaded

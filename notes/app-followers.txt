@@ -1,0 +1,52 @@
+1. To render you need to query to the DB for the information that you need (username, name, createdAt, text)
+2. Create the controller handler to retrieve the info from the models and pass it to the home template
+3. Receive the data in the home template (which will be a loop of all the tweets)
+
+
+Followers
+For the followers of a user, you need to retrieve from the followers table their followers. You need to handle the case where they have zero followers (zero rows returned) since everyone will be in that situation at the beggining of their journey in the app.
+
+Creating the relationship
+1. Models
+Add a create(when someone starts to follow) in both following and followers table to create both relationship
+
+2. Controllers
+You recieve the username context and username param to pass to the create service and make the relationship
+
+3. Views
+Someone will decide to click in the follow button and you have to pass the username context and the username param to create that relationship
+Render "following" instead of follow
+
+Reading the relationship
+1. Models
+Add a retrieve followers and following functions to ask to the DB for these fields of a determined user
+
+2. Controllers
+You retrieve the followers and following of a user by their username
+
+3. Views
+Someone visits the profile of another user and watches their followers and following fields
+
+
+Deleting the relationship
+1. Models
+Receive the username context and username to break the relationship in both tables
+
+2. Controllers
+You recieve the username context and username param to pass to the delete service and break the relationship
+
+3. Views
+Someone clicks in following and this means to unfollow the person. The "following" button becomes "follow" again
+
+
+
+Creating the GET following and followers page
+1. Create the route /following 
+2. create the hanlder
+3. Following handler: Ask to the db the users that are being followed so you pass their data (profile_data, name, username and if exists a relationship) to the template
+4. Following service: You need to return the usernames (following_username) that a especific user (user_username) is following. This could be a slice of usernames. Then with these usernames retrieve the meta data of them and return a slice of users.
+
+1. Create the route /followers 
+2. create the hanlder
+3. Follower handler: Ask to the db the followers so you pass their data (profile_data, name, username and if exists a relationship) to the template
+4. Followers service: You need to return the usernames (follower_username) that a especific user (user_username) has. This could be a slice of usernames. Then with these usernames retrieve the meta data of them and return a slice of users.

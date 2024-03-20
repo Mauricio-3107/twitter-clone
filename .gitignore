@@ -1,0 +1,7 @@
+modd.conf
+
+#ENV VAR
+.env
+
+#Images
+images/

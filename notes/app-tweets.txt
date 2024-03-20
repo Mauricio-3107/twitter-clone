@@ -1,0 +1,39 @@
+The feed has to show all the tweets of the people you are following.
+
+Models
+1. Query to the DB for the following accounts of a user
+2. Query for their tweets of the slice of following accounts (find out if you can do one query to look for all the tweets of a user)
+
+Constrollers
+1. Query to the DB for all the following users of a users
+2. You will have a slice of these users and now query to the DB for their tweets
+3. You will need a slice of tweets from all the users and you need to render in chronological order
+4. Curate the data: users.profile_image, users.name, users.username_original, tweets.text, tweets.createdAt, tweets.id
+
+Views
+1. Write the template with the curated data from the controllers
+
+
+Pictures on tweets
+Models
+-Modify the tweets table to accept pictures (pics are optional)
+-The pictures will be served as the profile images
+-Modify all the tweet services to accept pictures and the tweet struct
+
+Controllers
+-Modify the tweets controllers to accept in the form the pics
+-Pass the URL (like profile image) to the tweet services
+-When retrieving tweets check if it has an image or images
+-Include in all the data variables this new field
+
+Views
+-Add to all the templates which right now are rendering tweets this new data which will be rendered conditionally since not all tweets must have images
+
+
+Tweet form
+The user can send:
+1. Text and no image
+2. Text and images
+3. No text and images
+
+No text and no images the form can't be sent.

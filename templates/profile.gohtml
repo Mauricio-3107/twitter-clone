@@ -1,0 +1,107 @@
+{{template "left-aside" .}}
+
+<!-- Middle Column (Scrollable Content) -->
+
+<div class="w-1/2 overflow-y-auto pt-4">
+  <!-- Sample Tweet/Post -->
+  {{template "profile" .ProfileData}}
+  {{range .TweetsData}}
+    {{template "tweets" .}}
+  {{end}}
+  <!-- More tweets/posts go here -->
+</div>
+
+{{template "right-aside" .}}
+
+{{template "overlay-modal-post" .ProfileData}}
+
+{{template "overlay-modal-edit" .ProfileData}}
+
+{{template "footer" .}}
+
+{{range .TweetsData}}
+  {{template "overlay-modal-reply-ajax" .}}
+  {{template "overlay-modal-retweet-quote" .}}
+  {{template "overlay-modal-post-quote" .}}
+{{end}}
+
+{{define "profile"}}
+    <div class="flex gap-1 px-3">
+        <button onclick="goBack()" class="rounded-full p-2 hover:bg-gray-200 focus:outline-none">
+            <svg width="15" height="13" viewBox="0 0 23 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M1.87929 9.02531H21.9944C22.2611 9.02531 22.5169 9.13267 22.7055 9.32377C22.8942 9.51487 23.0001 9.77405 23.0001 10.0443C23.0001 10.3146 22.8942 10.5737 22.7055 10.7648C22.5169 10.9559 22.2611 11.0633 21.9944 11.0633H1.87929C1.61255 11.0633 1.35673 10.9559 1.16811 10.7648C0.979498 10.5737 0.873535 10.3146 0.873535 10.0443C0.873535 9.77405 0.979498 9.51487 1.16811 9.32377C1.35673 9.13267 1.61255 9.02531 1.87929 9.02531Z" fill="black"/>
+                <path d="M2.42901 9.89873L10.7684 18.1057C10.9572 18.2916 11.0633 18.5436 11.0633 18.8065C11.0633 19.0693 10.9572 19.3214 10.7684 19.5072C10.5796 19.6931 10.3236 19.7975 10.0565 19.7975C9.78954 19.7975 9.53347 19.6931 9.34467 19.5072L0.295396 10.5995C0.20176 10.5075 0.12747 10.3983 0.0767807 10.2781C0.0260918 10.1578 0 10.0289 0 9.89873C0 9.76855 0.0260918 9.63964 0.0767807 9.5194C0.12747 9.39915 0.20176 9.28993 0.295396 9.19799L9.34467 0.290257C9.53347 0.104408 9.78954 0 10.0565 0C10.3236 0 10.5796 0.104408 10.7684 0.290257C10.9572 0.476105 11.0633 0.728169 11.0633 0.990999C11.0633 1.25383 10.9572 1.50589 10.7684 1.69174L2.42901 9.89873Z" fill="black"/>
+            </svg>
+        </button>
+        <h2 class="text-xl font-semibold" >{{.Name}}</h2>
+    </div>
+    <div class="bg-white border-b px-4 py-2 mt-2">
+        <!-- Profile Image -->
+        <div class="flex items-center justify-between mb-4">
+            <img src="{{.ProfileImage}}" alt="Profile Picture" class="w-24 h-24 rounded-full">
+            {{if .IsOwnProfile}}
+              <div class="flex items-center justify-center mb-4">
+                  <a class="text-black font-semibold border border-black px-4 py-1 rounded-full shadow-sm hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-black focus:ring-opacity-50 cursor-pointer" onclick="toggleModalEdit()">Edit Profile</a>
+              </div>
+            {{else}}
+              <!-- Follow Button -->
+              {{if .IsFollowing}}
+                  <div class="flex items-center justify-center mb-4">
+                      <form
+                        action="/unfollowing"
+                        method="post"
+                        onsubmit=""
+                      >
+                        <div class="hidden">
+                          {{ csrfField }}
+                        </div>
+                        <input type="hidden" name="username" value="{{.Username}}">
+                        <button
+                          id="isFollowingBtn"
+                          onmouseover="followingToggle(true)"
+                          onmouseout="followingToggle(false)"
+                          type="submit"      
+                          class="text-black font-semibold border border-black px-4 py-1 rounded-full shadow-sm hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-black focus:ring-opacity-50 cursor-pointer"
+                        >
+                            Following
+                        </button>
+                      </form>
+                  </div>
+              {{else}}
+                  <div class="flex items-center justify-center mb-4">
+                      <form
+                          action="/following"
+                          method="post"
+                          onsubmit=""
+                      >
+                          <div class="hidden">
+                              {{ csrfField }}
+                          </div>
+                          <input type="hidden" name="username" value="{{.Username}}">
+                          <button
+                              type="submit"
+                              class="text-white bg-black font-semibold px-4 py-1 rounded-full shadow-sm hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-black focus:ring-opacity-50 cursor-pointer">
+                              Follow
+                          </button>
+                      </form>
+                  </div>
+              {{end}}
+            {{end}}
+        </div>
+        
+        <!-- Profile Information -->
+        <div class="mb-4">
+            <h2 class="text-xl font-semibold">{{.Name}}</h2>
+            <p class="text-gray-500 text-sm">@{{.Username}}</p>
+            {{/* <p class="text-gray-600 text-sm">{{.Bio}}</p> */}}
+            <div class="flex space-x-4 mt-2"> <!-- Add space between children -->
+                <a href="/{{.Username}}/following" class="text-gray-500 hover:underline hover:text-black"> <!-- Style to match username -->
+                    <span class="font-bold text-black hover:underline hover:text-black">{{.FollowingsCount}}</span> Following <!-- Placeholder for following count -->
+                </a>
+                <a href="/{{.Username}}/followers" class="text-gray-500 hover:underline hover:text-black"> <!-- Style to match username -->
+                    <span class="font-bold text-black hover:underline ">{{.FollowersCount}}</span> Followers <!-- Placeholder for follower count -->
+                </a>
+            </div>
+        </div>
+    </div>
+{{end}}

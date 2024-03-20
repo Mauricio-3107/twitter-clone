@@ -1,0 +1,23 @@
+{{template "left-aside" .}}
+<div class="w-1/2 overflow-y-auto">
+  <div class="p-4">
+    <h2 class="text-xl font-semibold" >Bookmarks</h2>
+    <p class="text-gray-500 text-sm">@{{.Username}}</p>
+  </div>
+
+  {{range .TweetsData}}
+    {{template "tweets" .}}
+  {{end}}
+</div>
+
+{{template "right-aside" .}}
+
+
+
+{{template "footer" .}}
+
+{{range .TweetsData}}
+  {{template "overlay-modal-reply-ajax" .}}
+  {{template "overlay-modal-retweet-quote" .}}
+  {{template "overlay-modal-post-quote" .}}
+{{end}}

@@ -1,0 +1,41 @@
+TWEETS
+Tweets actions (only text):
+
+1. Create a tweet
+2. Edit a tweet
+3. Delete a Tweet
+
+* Everyone will have access to view tweets
+
+MODELS
+1. Create a tweet in the DB
+2. Retrieve a tweet by the tweet id to give access to everyone
+3. Retrieve a tweet by the tweet id to edit it
+4. Delete a tweet
+
+CONTROLLERS
+1. New (you won't need this one) and Create controllers for create a tweet
+2. Edit and Update controllers to edit a tweet
+3. One controller to show all the tweets you wrote (profile)
+4. One controller to delete a tweet
+
+VIEWS
+1. The form to create a tweet
+2. The buttons to edit and delete a tweet
+3. Your profile
+
+
+STRUCTURING DATA
+tweets
+ID SERIAL PRIMARY KEY,
+user_id INTEGER REFERENCES users(ID) ON DELETE CASCADE,
+text TEXT NOT NULL,
+created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+
+
+
+
+
+The feed:
+You will only view tweets from pepople you follow
+* The feed will be restricted to users only

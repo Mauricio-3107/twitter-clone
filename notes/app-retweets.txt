@@ -1,0 +1,17 @@
+Retweets
+
+Retweet is an already exisiting tweet that becomes like if it were your tweet but it keeps all the meta data of the original tweet
+
+Architecture: Create another table especifically for retweets, which will have to have these fields: id, tweet_id, user_username, text, created at, parent_retweet_id
+
+If you have a tweet and a retweet with the same id = 1, and then you mix the replies, the reply for tweet 1 will be also on the retweet 1
+
+When you are simply retweeting something, you dont have your own replies, unlike when you quote something, you do have your own replies.
+When you are only retweeting all the information about the original tweet stays there so it is just a tweet from another user that you will be referencing and if it is referenced by you, it has to be on your profile and if like it would belong to you as well.
+
+What data should I send to the DB so now an existing tweet is it referenced by a different user?
+the user who is retweeting and the id of the tweet to save now into the tweets of the user retweeting this new tweet
+
+What is the difference in the feed between an own tweet, a tweet from a user you are following and a retweet?
+
+To make it work, you have to add and remove instead of toggle, and also change the retweetedIDs so when is loading the page, try to catch them and if so set to the correct one.

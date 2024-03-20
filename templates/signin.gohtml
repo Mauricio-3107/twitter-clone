@@ -1,0 +1,66 @@
+{{template "header" .}}
+<div class="flex items-center justify-center h-screen bg-gray-100">
+  <div class="bg-white p-8 rounded shadow-md">
+    <h2 class="text-2xl font-semibold mb-6">Inicia sesión en X</h2>
+    <form action="/signin" method="post">
+      <div class="hidden">
+        {{ csrfField }}
+      </div>
+      <div class="flex flex-col w-96">
+        <a
+          class="py-2 px-4 rounded-full border border-gray-100 hover:bg-blue-100 mb-6 text-center cursor-pointer"
+          href="#"
+          >Iniciar sesión con Google</a
+        >
+        <a
+          class="py-2 px-4 rounded-full border border-gray-100 hover:bg-blue-100 mb-6 text-center cursor-pointer"
+          href="#"
+          >Iniciar sesión con Apple</a
+        >
+        <div class="border border-gray-100 mb-6"></div>
+        <div class="mb-4">
+          <label for="email" class="block text-gray-600">Email</label>
+          <input
+            type="email"
+            id="email"
+            name="email"
+            class="w-full px-4 py-2 border rounded focus:outline-none focus:border-black"
+            value="{{.Email}}"
+            {{if
+            not
+            .Email}}autofocus{{end}}
+          />
+        </div>
+
+        <div class="mb-4">
+          <label for="password" class="block text-gray-600">Contraseña</label>
+          <input
+            type="password"
+            id="password"
+            name="password"
+            class="w-full px-4 py-2 border rounded focus:outline-none focus:border-black"
+            {{if
+            .Email}}autofocus{{end}}
+          />
+        </div>
+
+        <button
+          type="submit"
+          class="bg-black text-white mt-4 px-4 py-3 rounded w-full hover:bg-gray-900 focus:outline-none"
+        >
+          Iniciar sesión
+        </button>
+        <div class="mt-8 w-full flex justify-between">
+          <p class="text-xs text-gray-500">
+            No tienes una cuenta?
+            <a href="/signup" class="underline">Regístrate</a>
+          </p>
+          <p class="text-xs text-gray-500">
+            <a href="/forgot-pw" class="underline">Olvidaste tu contraseña?</a>
+          </p>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>
+{{template "footer" .}}
