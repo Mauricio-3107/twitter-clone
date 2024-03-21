@@ -70,15 +70,21 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	db, err := models.Open(cfg.PSQL)
+	err = run(cfg)
 	if err != nil {
 		panic(err)
+	}
+}
+func run(cfg config) error {
+	db, err := models.Open(cfg.PSQL)
+	if err != nil {
+		return err
 	}
 	defer db.Close()
 
 	err = models.MigrateFS(db, migrations.FS, ".")
 	if err != nil {
-		panic(err)
+		return err
 	}
 
 	// Set up services
@@ -204,13 +210,13 @@ func main() {
 		r.Get("/", usersC.CurrentUser)
 	})
 
+	assetsHandler := http.FileServer(http.Dir("assets"))
+	r.Get("/assets/*", http.StripPrefix("/assets", assetsHandler).ServeHTTP)
+
 	r.NotFound(func(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Page not found", http.StatusNotFound)
 	})
 	// Start the server
 	fmt.Printf("Starting the server on %s...\n", cfg.Server.Address)
-	err = http.ListenAndServe(cfg.Server.Address, r)
-	if err != nil {
-		panic(err)
-	}
+	return http.ListenAndServe(cfg.Server.Address, r)
 }

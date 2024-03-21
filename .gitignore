@@ -5,3 +5,6 @@ modd.conf
 
 #Images
 images/
+
+# Node stuff
+node_modules/
